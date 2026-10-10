@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper Professional</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href=".css">
+</head>
+<body class="no-select">
+
+    <!-- Fixed Control & Status Panel (Top Left) -->
+    <div class="fixed-panel">
+        <!-- Action Buttons & Audio Volume -->
+        <div class="action-buttons">
+            <div class="volume-control">
+                <i class="fa-solid fa-volume-high volume-icon"></i>
+                <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
+                <span id="volume-text" class="volume-text font-digital">60%</span>
+            </div>
+            <button id="mobile-flag-btn" onclick="toggleFlagMode()" class="mobile-flag-btn">
+                <i class="fa-solid fa-flag text-red-500"></i>
+                <span id="flag-mode-text">Mode: Dig</span>
+            </button>
+            <button onclick="resetGame()" class="restart-btn">
+                <i class="fa-solid fa-rotate-right"></i> Restart
+            </button>
+        </div>
+
+        <!-- Dashboard Stats Bar -->
+        <div class="stats-bar font-digital">
+            <!-- Distance -->
+            <div class="stat">
+                <span class="stat-label font-sans">
+                    <i class="fa-solid fa-person-walking text-emerald-400"></i> Distance
+                </span>
+                <span id="distance-count" class="stat-value dist-value">0m</span>
+            </div>
+
+            <!-- Timer -->
+            <div class="stat">
+                <span class="stat-label font-sans">
+                    <i class="fa-regular fa-clock text-cyan-400"></i> Time
+                </span>
+                <span id="timer" class="stat-value time-value">0:00.00</span>
+            </div>
+
+            <!-- Clicks Counter -->
+            <div class="stat">
+                <span class="stat-label font-sans">
+                    <i class="fa-solid fa-arrow-pointer text-amber-400"></i> Clicks
+                </span>
+                <span id="clicks-count" class="stat-value clicks-value">000</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="board-container">
+            <div id="board" class="grid gap-1"></div>
+        </div>
+    </main>
+
+    <!-- Footer Info -->
+    <footer class="footer-info">
+        Left-click / Tap to dig &bull; Right-click / Toggle mode to flag &bull; Click opened numbers to Chord &bull; Clear 45/65 cells in front 5m to advance!
+    </footer>
+
+    <div id="modal" class="modal">
+        <div class="modal-card" id="modal-card">
+            <div id="modal-icon" class="modal-icon">💥</div>
+            <h2 id="modal-title" class="modal-title lose">GAME OVER</h2>
+            <p id="modal-desc" class="modal-desc">You stepped on a mine!</p>
+
+            <!-- Final Stats Summary -->
+            <div class="final-stats font-digital">
+                <div class="final-stat">
+                    <span class="final-label font-sans">DISTANCE REACHED</span>
+                    <span id="final-distance" class="final-time">0m</span>
+                </div>
+                <div class="final-stat">
+                    <span class="final-label font-sans">TOTAL CLICKS</span>
+                    <span id="final-clicks" class="final-clicks">0</span>
+                </div>
+            </div>
+
+            <button onclick="closeModalAndReset()" class="play-again-btn">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+
+    <script src=".js"></script>
+</body>
+</html>
