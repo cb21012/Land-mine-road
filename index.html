@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minesweeper Professional</title>
+    <title>Lmr</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href=".css">
@@ -24,7 +24,7 @@
                 <span id="flag-mode-text">Mode: Dig</span>
             </button>
             <button onclick="resetGame()" class="restart-btn">
-                <i class="fa-solid fa-rotate-right"></i> Restart
+                <i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span>
             </button>
         </div>
 
@@ -33,7 +33,7 @@
             <!-- Distance -->
             <div class="stat">
                 <span class="stat-label font-sans">
-                    <i class="fa-solid fa-person-walking text-emerald-400"></i> Distance
+                    <i class="fa-solid fa-person-walking text-emerald-400"></i> <span id="stats-dist-txt">Distance</span>
                 </span>
                 <span id="distance-count" class="stat-value dist-value">0m</span>
             </div>
@@ -41,7 +41,7 @@
             <!-- Timer -->
             <div class="stat">
                 <span class="stat-label font-sans">
-                    <i class="fa-regular fa-clock text-cyan-400"></i> Time
+                    <i class="fa-regular fa-clock text-cyan-400"></i> <span id="stats-time-txt">Time</span>
                 </span>
                 <span id="timer" class="stat-value time-value">0:00.00</span>
             </div>
@@ -49,7 +49,7 @@
             <!-- Clicks Counter -->
             <div class="stat">
                 <span class="stat-label font-sans">
-                    <i class="fa-solid fa-arrow-pointer text-amber-400"></i> Clicks
+                    <i class="fa-solid fa-arrow-pointer text-amber-400"></i> <span id="stats-click-txt">Clicks</span>
                 </span>
                 <span id="clicks-count" class="stat-value clicks-value">000</span>
             </div>
@@ -63,7 +63,7 @@
     </main>
 
     <!-- Footer Info -->
-    <footer class="footer-info">
+    <footer class="footer-info" id="footer-text">
         Left-click / Tap to dig &bull; Right-click / Toggle mode to flag &bull; Click opened numbers to Chord &bull; Clear 45/65 cells in front 5m to advance!<br>
         Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)
     </footer>
@@ -86,7 +86,7 @@
                 </div>
             </div>
 
-            <button onclick="closeModalAndReset()" class="play-again-btn">
+            <button onclick="closeModalAndReset()" class="play-again-btn" id="retry-btn">
                 Try Again
             </button>
         </div>
