@@ -11,7 +11,11 @@
 <body class="no-select">
 
     <!-- RT -->
-    <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
+    <div class="volume-control">
+        <i class="fa-solid fa-volume-high volume-icon"></i>
+        <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
+        <span id="volume-text" class="volume-text font-digital">100%</span>
+    </div>
     <button onclick="toggleLang()" class="lang-btn"> <span id="lang-btn">En</span></button>
     <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span></button>
     <!-- RB -->
