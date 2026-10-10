@@ -31,6 +31,7 @@ function updateTexts() {
     document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
     document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
+    document.getElementById("lang-btn").textContent = ja ? "Ja" : "En";
     document.getElementById("footer-text").innerHTML = ja ? 
         `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
         Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` :
