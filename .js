@@ -24,7 +24,7 @@ function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.se
 function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Dig" : "Mode : Flag";
-    document.getElementById("restart-byn").textContent = ja ? "最初から" : "Restart";
+    document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
     document.getElementById("stats-dist-txt").textContent = ja ? "距離" : "Distance";
     document.getElementById("stats-time-txt").textContent = ja ? "時間" : "Time";
     document.getElementById("stats-click-txt").textContent = ja ? "クリック数" : "Clicks";
