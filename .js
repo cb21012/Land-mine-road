@@ -17,11 +17,11 @@ let timerInterval = null;
 let lastUpdTime = 0;
 let isFlagModeMobile = false;
 let seVolume = 60;
-let clang = 0;
+let clang = (localStorage.getItem('Lmr_lang') ?? 0);
 
-function toggleLang() {clang = clang===0 ? 1 : 0;}
+function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.setItem('Lmr_lang', clang)}
 
-function updatetexts() {
+function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Dig" : "Mode : Flag";
     document.getElementById("restart-byn").textContent = ja ? "最初から" : "Restart";
@@ -568,3 +568,5 @@ function closeModalAndReset() {
         resetGame();
     }, 300);
 }
+
+updateTexts()
