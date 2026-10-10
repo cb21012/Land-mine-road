@@ -192,6 +192,9 @@ button {
     border: 1px solid #334155;
     padding: .25rem .5rem;
     border-radius: .5rem;
+    position: fixed;
+    top: 8px;
+    right: 8px;
 }
 
 .volume-icon {
@@ -200,9 +203,6 @@ button {
 }
 
 .volume-control input[type="range"] {
-    position: fixed;
-    top: 8px;
-    right: 8px;
     accent-color: #22d3ee;
     width: 70px;
     cursor: pointer;
