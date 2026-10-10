@@ -17,6 +17,26 @@ let timerInterval = null;
 let lastUpdTime = 0;
 let isFlagModeMobile = false;
 let seVolume = 60;
+let clang = 0;
+
+function toggleLang() {clang = clang===0 ? 1 : 0;}
+
+function updatetexts() {
+    const ja = clang===1;
+    document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Dig" : "Mode : Flag";
+    document.getElementById("restart-byn").textContent = ja ? "最初から" : "Restart";
+    document.getElementById("stats-dist-txt").textContent = ja ? "距離" : "Distance";
+    document.getElementById("stats-time-txt").textContent = ja ? "時間" : "Time";
+    document.getElementById("stats-click-txt").textContent = ja ? "クリック数" : "Clicks";
+    document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
+    document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
+    document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
+    document.getElementById("footer-text").innerHTML = ja ? 
+        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
+        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` :
+        `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう<br>
+        クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`
+}
 
 window.onload = () => {
     initVolume();
