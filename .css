@@ -126,12 +126,6 @@ button {
     max-width: calc(100% - 1.5rem);
 }
 
-.board-container {
-    max-width: 100vw;
-    max-height: calc(100vh - 160px);
-    overflow: auto;
-}
-
 .site-header {
     width: 100%;
     max-width: 42rem;
@@ -154,10 +148,11 @@ button {
 
 .main-content {
     width: 100%;
-    max-width: 48rem;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 1rem;
 }
 
@@ -255,8 +250,8 @@ button {
     transition: all .15s ease;
 }
 
-.lang-btn {position: fixed; top: 20px; right: 8px;}
-.restart-btn {position: fixed; top: 56px; right: 8px;}
+.lang-btn {position: fixed; top: 40px; right: 8px;}
+.restart-btn {position: fixed; top: 76px; right: 8px;}
 
 .restart-btn:hover, .lang-btn:hover {
     background: linear-gradient(to right, #2dd4bf, #06b6d4);
@@ -382,6 +377,45 @@ button {
     right: -3px;
     background-color: #eab308;
     color: #020617;
+}
+
+/* 画面幅が高さより小さいとき（進行方向：下 -> 上） */
+@media (max-aspect-ratio: 1/1) {
+    .board-container {
+        padding: 40px 16px;
+        overflow: visible;
+        max-height: none;
+        max-width: 100vw;
+    }
+
+    #board {
+        transform-origin: center center;
+        rotate: -90deg;
+    }
+
+    /* マス内のテキストやアイコンが横向き・逆さまにならないよう90度回転して正立 */
+    .cell-btn > * {
+        rotate: 90deg;
+    }
+
+    /* バッジを回転後の見た目上の上側（元の右端側）に正立して配置 */
+    .line-badge {
+        top: auto;
+        right: -28px;
+        left: auto;
+        transform: rotate(90deg);
+        transform-origin: center center;
+    }
+
+    .badge-frontline {
+        bottom: -3px;
+        top: auto;
+    }
+
+    .badge-checkline {
+        top: -3px;
+        bottom: auto;
+    }
 }
 
 .footer-info {

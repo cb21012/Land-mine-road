@@ -2,8 +2,9 @@
 const ROWS = 13;
 const VIEW_COLS = 33;
 const MINE_RATIO = 0.08;
-const INITIAL_GEN_LEN = 100;
-const CHUNK_GEN_LEN = 50;
+const INITIAL_GEN_LEN = 1000;
+const CHUNK_GEN_LEN = 200;
+const moveSpeed = 8;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let maxGeneratedCol = 0;
@@ -23,7 +24,7 @@ function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.se
 
 function updateTexts() {
     const ja = clang===1;
-    document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Dig" : "Mode : Flag";
+    document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
     document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
     document.getElementById("stats-dist-txt").textContent = ja ? "距離" : "Distance";
     document.getElementById("stats-time-txt").textContent = ja ? "時間" : "Time";
@@ -33,10 +34,10 @@ function updateTexts() {
     document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
     document.getElementById("lang-btn").textContent = ja ? "Ja" : "En";
     document.getElementById("footer-text").innerHTML = ja ? 
-        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
-        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` :
         `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう<br>
-        クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`
+        クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` : 
+        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
+        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`
 }
 
 window.onload = () => {
@@ -397,7 +398,7 @@ function canAdvanceNext() {
         }
     }
 
-    return openedCount >= 45 || (safeCellCount > 0 && openedSafeCount === safeCellCount);
+    return openedCount >= 45 || (openedSafeCount === safeCellCount);
 }
 
 async function checkAdvanceAnimated() {
@@ -439,17 +440,9 @@ function animateSlideStep() {
         if (distance >= 8) {
             boardEl.style.transition = 'transform 0.1s linear';
             boardEl.style.transform = `translateX(-${stepPx}px)`;
-
-            setTimeout(() => {
-                boardEl.style.transition = 'none';
-                boardEl.style.transform = 'translateX(0)';
-                resolve();
-            }, 100);
+            setTimeout(() => {boardEl.style.transition = 'none'; boardEl.style.transform = 'translateX(0)'; resolve();}, 1000/moveSpeed);
         } else {
-            // Under 8m, wait 0.1s to lock input smoothly while advancing
-            setTimeout(() => {
-                resolve();
-            }, 100);
+            setTimeout(() => {resolve();}, 1000/moveSpeed);
         }
     });
 }
@@ -504,11 +497,10 @@ function toggleFlagMode() {
     const text = document.getElementById('flag-mode-text');
     if (isFlagModeMobile) {
         btn.classList.add('flag-active');
-        text.innerText = 'Mode: Flag';
     } else {
         btn.classList.remove('flag-active');
-        text.innerText = 'Mode: Dig';
     }
+    document.getElementById("flag-mode-text").textContent = clang===1 ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
 }
 
 function triggerGameOver(explodedCell) {
