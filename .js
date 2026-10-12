@@ -1,10 +1,10 @@
 // Infinite Road Minesweeper Logic
 const ROWS = 13;
 const VIEW_COLS = 33;
-const MINE_RATIO = 0.08;
+const MINE_RATIO = 0.01;
 const INITIAL_GEN_LEN = 100;
 const CHUNK_GEN_LEN = 50;
-const progressSpeed = 12.5;
+const progressSpeed = 50;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let maxGeneratedCol = 0;
@@ -20,7 +20,127 @@ let timerInterval = null;
 let lastUpdTime = 0;
 let isFlagModeMobile = false;
 let seVolume = 60;
+let bgmVolume = 60;
 let clang = (localStorage.getItem('Lmr_lang') ?? 0);
+
+// BGM Audio Controller
+let currentBgmAudio = null;
+let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
+let bgmFadeInterval = null;
+
+function getBgmTargetVolume() {
+    return (bgmVolume / 100) * 0.5;
+}
+
+function getExpectedBgmTrack(dist) {
+    const mod = ((dist % 800) + 800) % 800;
+    return (mod >= 750 && mod <= 799) ? 'bgm_dz' : 'bgm1';
+}
+
+function startOrUpdateBgm() {
+    if (isGameOver) return;
+    const track = getExpectedBgmTrack(distance);
+    if (currentBgmTrack === track && currentBgmAudio) {
+        return;
+    }
+    switchBgm(track);
+}
+
+function switchBgm(newTrack) {
+    if (bgmFadeInterval) {
+        clearInterval(bgmFadeInterval);
+        bgmFadeInterval = null;
+    }
+
+    const oldAudio = currentBgmAudio;
+    currentBgmTrack = newTrack;
+
+    const newAudio = new Audio(newTrack === 'bgm_dz' ? 'sebgm/bgm_dz.ogg' : 'sebgm/bgm1.ogg');
+    newAudio.loop = true;
+    newAudio.volume = 0;
+    currentBgmAudio = newAudio;
+
+    const playPromise = newAudio.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+    }
+
+    const fadeOutDuration = 1000;
+    const fadeInDuration = 1000;
+    const stepInterval = 40;
+    const fadeOutSteps = fadeOutDuration / stepInterval;
+    const fadeInSteps = fadeInDuration / stepInterval;
+
+    let step = 0;
+    const startOldVol = oldAudio ? oldAudio.volume : 0;
+
+    bgmFadeInterval = setInterval(() => {
+        step++;
+        if (oldAudio && step <= fadeOutSteps) {
+            const ratio = 1 - (step / fadeOutSteps);
+            oldAudio.volume = Math.max(0, startOldVol * ratio);
+            if (step === fadeOutSteps) {
+                oldAudio.pause();
+            }
+        }
+
+        if (step >= fadeOutSteps) {
+            const inStep = step - fadeOutSteps;
+            const target = getBgmTargetVolume();
+            const ratio = Math.min(1, inStep / fadeInSteps);
+            newAudio.volume = Math.min(1, target * ratio);
+
+            if (inStep >= fadeInSteps) {
+                newAudio.volume = target;
+                clearInterval(bgmFadeInterval);
+                bgmFadeInterval = null;
+            }
+        }
+    }, stepInterval);
+}
+
+function stopBgmGameOver() {
+    if (bgmFadeInterval) {
+        clearInterval(bgmFadeInterval);
+        bgmFadeInterval = null;
+    }
+    if (!currentBgmAudio) return;
+
+    const audioToStop = currentBgmAudio;
+    const initialVol = audioToStop.volume;
+    const duration = 1000;
+    const stepInterval = 40;
+    const totalSteps = duration / stepInterval;
+    let step = 0;
+
+    bgmFadeInterval = setInterval(() => {
+        step++;
+        const ratio = 1 - (step / totalSteps);
+        audioToStop.volume = Math.max(0, initialVol * ratio);
+        if (step >= totalSteps) {
+            audioToStop.pause();
+            audioToStop.volume = 0;
+            clearInterval(bgmFadeInterval);
+            bgmFadeInterval = null;
+            if (currentBgmAudio === audioToStop) {
+                currentBgmAudio = null;
+                currentBgmTrack = null;
+            }
+        }
+    }, stepInterval);
+}
+
+function stopBgmImmediately() {
+    if (bgmFadeInterval) {
+        clearInterval(bgmFadeInterval);
+        bgmFadeInterval = null;
+    }
+    if (currentBgmAudio) {
+        currentBgmAudio.pause();
+        currentBgmAudio = null;
+    }
+    currentBgmTrack = null;
+}
 
 function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.setItem('Lmr_lang', clang)}
 
@@ -53,10 +173,22 @@ function initVolume() {
             seVolume = parsed;
         }
     }
-    const slider = document.getElementById('se-volume');
-    const text = document.getElementById('volume-text');
-    if (slider) slider.value = seVolume;
-    if (text) text.innerText = `${seVolume}%`;
+    const seSlider = document.getElementById('se-volume');
+    const seText = document.getElementById('volume-text');
+    if (seSlider) seSlider.value = seVolume;
+    if (seText) seText.innerText = `${seVolume}%`;
+
+    const savedBgmVol = localStorage.getItem('Lmr_bgmVol');
+    if (savedBgmVol !== null) {
+        const parsedBgm = parseInt(savedBgmVol, 10);
+        if (!isNaN(parsedBgm) && parsedBgm >= 0 && parsedBgm <= 100) {
+            bgmVolume = parsedBgm;
+        }
+    }
+    const bgmSlider = document.getElementById('bgm-volume');
+    const bgmText = document.getElementById('bgm-volume-text');
+    if (bgmSlider) bgmSlider.value = bgmVolume;
+    if (bgmText) bgmText.innerText = `${bgmVolume}%`;
 }
 
 function updateVolume(val) {
@@ -66,6 +198,16 @@ function updateVolume(val) {
     if (text) text.innerText = `${seVolume}%`;
 }
 
+function updateBgmVolume(val) {
+    bgmVolume = parseInt(val, 10);
+    localStorage.setItem('Lmr_bgmVol', bgmVolume);
+    const text = document.getElementById('bgm-volume-text');
+    if (text) text.innerText = `${bgmVolume}%`;
+    if (currentBgmAudio && !bgmFadeInterval) {
+        currentBgmAudio.volume = getBgmTargetVolume();
+    }
+}
+
 function playMineSe() {
     const audio = new Audio("sebgm/lm.mp3");
     audio.volume = 0.6 * seVolume / 100;
@@ -73,6 +215,7 @@ function playMineSe() {
 }
 
 function resetGame() {
+    stopBgmImmediately();
     clearInterval(timerInterval);
     timerInterval = null;
     timerSeconds = 0;
@@ -201,13 +344,17 @@ function renderBoard() {
             
             let classList = 'cell-btn cell-unopened';
 
-            // Frontline green line (left border of distance col)
+            // Frontline indicator (left vertical continuous line)
             if (c === distance) {
-                classList += ' cell-frontline';
+                const lineIndicator = document.createElement('span');
+                lineIndicator.className = 'line-marker frontline-marker';
+                cellBtn.appendChild(lineIndicator);
             }
-            // Checkline yellow line (right border of distance+4 col)
+            // Checkline indicator (right vertical continuous line)
             if (c === distance + 4) {
-                classList += ' cell-checkline';
+                const lineIndicator = document.createElement('span');
+                lineIndicator.className = 'line-marker checkline-marker';
+                cellBtn.appendChild(lineIndicator);
             }
 
             cellBtn.className = classList;
@@ -284,6 +431,7 @@ async function handleCellClick(r, c) {
     if (isFirstClick) {
         isFirstClick = false;
         startTimer();
+        startOrUpdateBgm();
         placeMinesInChunk(0, maxGeneratedCol, r, c);
         recalculateNeighborMines(0, maxGeneratedCol);
     }
@@ -413,6 +561,7 @@ async function checkAdvanceAnimated() {
         await animateSlideStep();
 
         distance++;
+        startOrUpdateBgm();
 
         if (distance + 50 > maxGeneratedCol) {
             generateColumns(maxGeneratedCol, CHUNK_GEN_LEN);
@@ -507,6 +656,7 @@ function toggleFlagMode() {
 
 function triggerGameOver(explodedCell) {
     playMineSe();
+    stopBgmGameOver();
     isGameOver = true;
     clearInterval(timerInterval);
     updateStatsDisplay();

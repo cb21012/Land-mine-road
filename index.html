@@ -10,11 +10,18 @@
 </head>
 <body class="no-select">
 
-    <!-- RT -->
-    <div class="volume-control">
-        <i class="fa-solid fa-volume-high volume-icon"></i>
-        <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
-        <span id="volume-text" class="volume-text font-digital">100%</span>
+    <!-- RT Controls -->
+    <div class="volume-control-panel">
+        <div class="volume-control bgm-control">
+            <span class="vol-label">BGM</span>
+            <input type="range" id="bgm-volume" min="0" max="100" step="5" value="60" oninput="updateBgmVolume(this.value)">
+            <span id="bgm-volume-text" class="volume-text font-digital">60%</span>
+        </div>
+        <div class="volume-control se-control">
+            <span class="vol-label">SE</span>
+            <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
+            <span id="volume-text" class="volume-text font-digital">60%</span>
+        </div>
     </div>
     <button onclick="toggleLang()" class="lang-btn"> <span id="lang-btn">En</span></button>
     <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span></button>
