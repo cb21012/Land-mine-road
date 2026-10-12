@@ -22,40 +22,16 @@
     <button id="mobile-flag-btn" onclick="toggleFlagMode()" class="mobile-flag-btn">
         <i class="fa-solid fa-flag text-red-500"></i><span id="flag-mode-text">Mode: Dig</span>
     </button>
-    <div class="fixed-panel">
         <!-- Dashboard Stats Bar -->
-        <div class="stats-bar font-digital">
-            <!-- Distance -->
-            <div class="stat">
-                <span class="stat-label font-sans">
-                    <i class="fa-solid fa-person-walking text-emerald-400"></i> <span id="stats-dist-txt">Distance</span>
-                </span>
-                <span id="distance-count" class="stat-value dist-value">0m</span>
-            </div>
-
-            <!-- Timer -->
-            <div class="stat">
-                <span class="stat-label font-sans">
-                    <i class="fa-regular fa-clock text-cyan-400"></i> <span id="stats-time-txt">Time</span>
-                </span>
-                <span id="timer" class="stat-value time-value">0:00.00</span>
-            </div>
-
-            <!-- Clicks Counter -->
-            <div class="stat">
-                <span class="stat-label font-sans">
-                    <i class="fa-solid fa-arrow-pointer text-amber-400"></i> <span id="stats-click-txt">Clicks</span>
-                </span>
-                <span id="clicks-count" class="stat-value clicks-value">000</span>
-            </div>
+        <div class="stats-bar">
+            <div class="stat"><span id="distance-count" class="stat-value dist-value"><i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i>0m</span></div>
+            <div class="stat"><span id="timer" class="stat-value time-value"><i class="stat-icon fa-regular fa-clock text-cyan-400"></i>0ms</span></div>
+            <div class="stat"><span id="clicks-count" class="stat-value clicks-value"><i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i>000</span></div>
+            <div class="stat"><span id="move-speed" class="stat-value speed-value"><i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i>0.0 km/h</span></div>
         </div>
-    </div>
 
-    <main class="main-content">
-        <div class="board-container">
-            <div id="board" class="grid gap-1"></div>
-        </div>
-    </main>
+    <!-- Game -->
+    <main class="main-content"><div class="board-container"><div id="board" class="grid gap-1"></div></div></main>
 
     <!-- Footer Info -->
     <footer class="footer-info" id="footer-text">
@@ -65,19 +41,22 @@
 
     <div id="modal" class="modal">
         <div class="modal-card" id="modal-card">
-            <div id="modal-icon" class="modal-icon">😵</div>
             <h2 id="modal-title" class="modal-title lose">You died!</h2>
             <p id="modal-desc" class="modal-desc">Oof</p>
 
             <!-- Final Stats Summary -->
+            <div class="final-score-bg font-digital">
+                <span class="final-label font-sans">SCORE</span>
+                <span id="final-score" class="final-score">0</span>
+            </div>
             <div class="final-stats font-digital">
                 <div class="final-stat">
-                    <span class="final-label font-sans">DISTANCE REACHED</span>
+                    <span class="final-label font-sans">DISTANCE</span>
                     <span id="final-distance" class="final-time">0m</span>
                 </div>
                 <div class="final-stat">
-                    <span class="final-label font-sans">TOTAL CLICKS</span>
-                    <span id="final-clicks" class="final-clicks">0</span>
+                    <span id="final-speed-label" class="final-label font-sans">SPEED</span>
+                    <span id="final-speed" class="final-speed">0.0 km/h</span>
                 </div>
             </div>
 

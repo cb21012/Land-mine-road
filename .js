@@ -2,9 +2,9 @@
 const ROWS = 13;
 const VIEW_COLS = 33;
 const MINE_RATIO = 0.08;
-const INITIAL_GEN_LEN = 1000;
-const CHUNK_GEN_LEN = 200;
-const moveSpeed = 8;
+const INITIAL_GEN_LEN = 100;
+const CHUNK_GEN_LEN = 50;
+const progressSpeed = 12.5;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let maxGeneratedCol = 0;
@@ -14,6 +14,8 @@ let isGameOver = false;
 let isSliding = false; // Lock flag during 0.1s/m slide animation
 let clicksCount = 0;
 let timerSeconds = 0;
+let moveSpeed = 0; // km per hour
+let score = 0;
 let timerInterval = null;
 let lastUpdTime = 0;
 let isFlagModeMobile = false;
@@ -26,9 +28,7 @@ function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
     document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
-    document.getElementById("stats-dist-txt").textContent = ja ? "距離" : "Distance";
-    document.getElementById("stats-time-txt").textContent = ja ? "時間" : "Time";
-    document.getElementById("stats-click-txt").textContent = ja ? "クリック数" : "Clicks";
+    document.getElementById("final-speed-label").textContent = ja ? "速度" : "SPEED";
     document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
     document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
@@ -78,6 +78,7 @@ function resetGame() {
     timerSeconds = 0;
     clicksCount = 0;
     distance = 0;
+    moveSpeed = 0;
     maxGeneratedCol = 0;
     boardMap.clear();
     isFirstClick = true;
@@ -440,9 +441,9 @@ function animateSlideStep() {
         if (distance >= 8) {
             boardEl.style.transition = 'transform 0.1s linear';
             boardEl.style.transform = `translateX(-${stepPx}px)`;
-            setTimeout(() => {boardEl.style.transition = 'none'; boardEl.style.transform = 'translateX(0)'; resolve();}, 1000/moveSpeed);
+            setTimeout(() => {boardEl.style.transition = 'none'; boardEl.style.transform = 'translateX(0)'; resolve();}, 1000/progressSpeed);
         } else {
-            setTimeout(() => {resolve();}, 1000/moveSpeed);
+            setTimeout(() => {resolve();}, 1000/progressSpeed);
         }
     });
 }
@@ -461,22 +462,23 @@ function incrementClick() {
 }
 
 function updateStatsDisplay() {
-    document.getElementById('distance-count').innerText = `${distance}m`;
-    document.getElementById('clicks-count').innerText = String(clicksCount).padStart(3, '0');
-    document.getElementById('timer').innerText = formatTime(timerSeconds);
+    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${distance}m`;
+    document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
+    document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock text-cyan-400"></i> ${formatTime(timerSeconds)}`;
+    document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i> ${formatMoveSpeed()}`;
+}
+
+function formatMoveSpeed() {
+    moveSpeed = timerSeconds > 0 ? distance * 3.6 / timerSeconds : 0;
+    return moveSpeed>1 ? `${moveSpeed.toFixed(2)} km/h` : `${(moveSpeed*1e3).toFixed(1)} m/h`
 }
 
 function formatTime(seconds) {
-    if (seconds>600) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds-hours*3600) / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${String(hours)}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    const deci = Math.floor((seconds * 100) % 100);
-    return `${String(minutes)}:${String(secs).padStart(2, '0')}.${String(deci).padStart(2, '0')}`;
+    if (seconds>36000) return `${Math.floor(seconds / 3600)}h${String(Math.floor((seconds/60) % 60)).padStart(2, '0')}m`
+    if (seconds>600) return `${Math.floor(seconds / 60)}m${String(Math.floor(seconds % 60)).padStart(2, '0')}s`
+    if (seconds>10) return `${Math.floor(seconds)}.${String(Math.floor((seconds * 100)%100)).padStart(2, '0')}s`
+    return `${Math.floor(seconds*1000)}ms`
+
 }
 
 function startTimer() {
@@ -507,6 +509,8 @@ function triggerGameOver(explodedCell) {
     playMineSe();
     isGameOver = true;
     clearInterval(timerInterval);
+    updateStatsDisplay();
+    score = Math.round(moveSpeed*distance);
 
     if (explodedCell) {
         explodedCell.justExploded = true;
@@ -540,7 +544,8 @@ function showModal() {
     const modalCard = document.getElementById('modal-card');
 
     document.getElementById('final-distance').innerText = `${distance}m`;
-    document.getElementById('final-clicks').innerText = clicksCount;
+    document.getElementById('final-speed').innerText = String(formatMoveSpeed());
+    document.getElementById('final-score').innerText = String(score);
 
     modal.classList.add('visible');
     setTimeout(() => {

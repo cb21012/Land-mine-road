@@ -10,6 +10,8 @@ body {
     min-height: 100%;
 }
 
+.font-digital {font-family: 'Share Tech Mono', monospace !important;}
+
 body {
     background-color: #020617;
     color: #f1f5f9;
@@ -22,15 +24,15 @@ body {
     padding: .5rem;
 }
 
-button {
-    font-family: inherit;
+.stat-icon {
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
-.font-digital {
-    font-family: 'Share Tech Mono', monospace !important;
-}
-
-.font-sans {
+.stat-value {
+    margin-left: auto;
+    font-family: 'Inter', sans-serif;
     font-family: 'Inter', sans-serif;
 }
 
@@ -105,25 +107,6 @@ button {
 .no-select {
     user-select: none;
     -webkit-user-select: none;
-}
-
-.fixed-panel {
-    position: fixed;
-    top: .75rem;
-    left: .75rem;
-    z-index: 40;
-    background-color: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid #1e293b;
-    border-radius: .75rem;
-    padding: .75rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, .5);
-    display: flex;
-    flex-direction: column;
-    gap: .625rem;
-    min-width: 320px;
-    max-width: calc(100% - 1.5rem);
 }
 
 .site-header {
@@ -264,11 +247,14 @@ button {
 }
 
 .stats-bar {
-    width: 100%;
+    position: fixed;
+    top: .75rem;
+    left: .75rem;
+    z-index: 40;
+    min-width: 480px;
     background-color: rgba(15, 23, 42, .8);
     border: 1px solid #1e293b;
-    border-radius: .75rem;
-    padding: 1rem;
+    padding: 6px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
     display: flex;
     align-items: center;
@@ -294,9 +280,8 @@ button {
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 700;
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 16px;
 }
 
 .dist-value {
@@ -309,6 +294,10 @@ button {
 
 .clicks-value {
     color: #fbbf24;
+}
+
+.speed-value {
+    color: #fb7185;
 }
 
 .board-container {
@@ -365,6 +354,7 @@ button {
     z-index: 20;
     pointer-events: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-family: 'Share Tech Mono', monospace !important;
 }
 
 .badge-frontline {
@@ -454,7 +444,7 @@ button {
     background-color: #0f172a;
     border: 1px solid #1e293b;
     border-radius: 1rem;
-    padding: 1.5rem;
+    padding: 0.4rem;
     width: 100%;
     max-width: 28rem;
     box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, .5), 0 25px 50px -12px rgba(0, 0, 0, .25);
@@ -465,12 +455,6 @@ button {
 
 .modal-card.show {
     transform: translateY(0);
-}
-
-.modal-icon {
-    font-size: 3.75rem;
-    line-height: 1;
-    margin-bottom: 1rem;
 }
 
 .modal-title {
@@ -490,20 +474,25 @@ button {
 
 .modal-desc {
     color: #94a3b8;
-    margin: 0 0 1.5rem;
+    margin: 0 0 0.5rem;
     font-size: .875rem;
     line-height: 1.25rem;
+}
+
+.final-score-bg {
+    display: grid;
+    gap: .25rem;
+    padding: 0.35rem;
+    background-color: #020617;
 }
 
 .final-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .75rem;
+    gap: .25rem;
+    padding: 0.35rem;
     background-color: #020617;
-    padding: 1rem;
-    border-radius: .75rem;
-    border: 1px solid #1e293b;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .final-stat {
@@ -516,6 +505,13 @@ button {
     color: #64748b;
 }
 
+.final-score {
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+    color: #22ee22;
+    font-weight: 700;
+}
+
 .final-time {
     font-size: 1.25rem;
     line-height: 1.75rem;
@@ -523,7 +519,7 @@ button {
     font-weight: 700;
 }
 
-.final-clicks {
+.final-speed {
     font-size: 1.25rem;
     line-height: 1.75rem;
     color: #fbbf24;
@@ -576,17 +572,18 @@ button {
         display: flex;
     }
 
-    .stat-value {
-        font-size: 1.875rem;
-        line-height: 2.25rem;
-    }
-
-    .modal-card {
-        padding: 2rem;
-    }
-
     .modal-title {
         font-size: 1.875rem;
         line-height: 2.25rem;
+    }
+
+    .cell-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+
+    #board {
+        grid-template-columns: repeat(33, 24px);
     }
 }
