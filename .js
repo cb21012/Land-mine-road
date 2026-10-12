@@ -1,10 +1,10 @@
 // Infinite Road Minesweeper Logic
 const ROWS = 13;
 const VIEW_COLS = 33;
-const MINE_RATIO = 0.01;
+const MINE_RATIO = 0.07;
 const INITIAL_GEN_LEN = 100;
 const CHUNK_GEN_LEN = 50;
-const progressSpeed = 50;
+const progressSpeed = 20;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let maxGeneratedCol = 0;
@@ -33,8 +33,8 @@ function getBgmTargetVolume() {
 }
 
 function getExpectedBgmTrack(dist) {
-    const mod = ((dist % 800) + 800) % 800;
-    return (mod >= 750 && mod <= 799) ? 'bgm_dz' : 'bgm1';
+    const mod = ((dist % 500) + 500) % 500;
+    return (mod >= 400 && mod <= 499) ? 'bgm_dz' : 'bgm1';
 }
 
 function startOrUpdateBgm() {
