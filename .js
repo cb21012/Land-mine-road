@@ -1,12 +1,18 @@
 // Infinite Road Minesweeper Logic
 const ROWS = 13;
 const VIEW_COLS = 33;
-const MINE_RATIO = 0.07;
+const MINE_RATIO = 0.02;
+const MINE_RATIO_MAX = 0.4;
 const INITIAL_GEN_LEN = 100;
 const CHUNK_GEN_LEN = 50;
 const progressSpeed = 20;
+const AREA_LENGTH = 300;
+const DZ_START_POS = 200;
+const DZ_END_POS = 299;
+const DZ_MINE_RATIO_MULT = 1.8;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
+let district = 1;
 let maxGeneratedCol = 0;
 let boardMap = new Map(); // Key: `${r},${c}` -> cell object
 let isFirstClick = true;
@@ -28,17 +34,37 @@ let currentBgmAudio = null;
 let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
 let bgmFadeInterval = null;
 
-function getBgmTargetVolume() {
-    return (bgmVolume / 100) * 0.5;
+function getBgmTargetVolume(trackName) {
+    // bgmInfosからトラックのvolumeを取得して設定値と掛け合わせる
+    const info = getBgmInfoByName(trackName || currentBgmTrack);
+    const trackVol = info ? info.volume : 1.0;
+    return Math.min(1, (bgmVolume / 100) * 0.5 * trackVol);
+}
+
+function getBgmInfoByName(name) {
+    if (!window.bgmInfos) return null;
+    return Object.values(window.bgmInfos).find(b => b.name === name) || null;
 }
 
 function getExpectedBgmTrack(dist) {
-    const mod = ((dist % 500) + 500) % 500;
-    return (mod >= 400 && mod <= 499) ? 'bgm_dz' : 'bgm1';
+    if (isDzPos(dist)) return 'bgm_dz';
+    const d = Math.floor(dist / AREA_LENGTH);
+    // district番号のbgmが存在するか確認 (bgm{d})
+    const trackName = `bgm${d}`;
+    if (window.bgmInfos && getBgmInfoByName(trackName)) {
+        return trackName;
+    }
+    return 'bgm1'; // フォールバック
+}
+
+function isDzPos(pos) {
+    const mod = ((pos % AREA_LENGTH) + AREA_LENGTH) % AREA_LENGTH;
+    return mod >= DZ_START_POS && mod <= DZ_END_POS;
 }
 
 function startOrUpdateBgm() {
     if (isGameOver) return;
+    district = Math.floor(distance / AREA_LENGTH) +1;
     const track = getExpectedBgmTrack(distance);
     if (currentBgmTrack === track && currentBgmAudio) {
         return;
@@ -55,7 +81,9 @@ function switchBgm(newTrack) {
     const oldAudio = currentBgmAudio;
     currentBgmTrack = newTrack;
 
-    const newAudio = new Audio(newTrack === 'bgm_dz' ? 'sebgm/bgm_dz.ogg' : 'sebgm/bgm1.ogg');
+    const info = getBgmInfoByName(newTrack);
+    const filePath = `sebgm/${info ? info.name : newTrack}.ogg`;
+    const newAudio = new Audio(filePath);
     newAudio.loop = true;
     newAudio.volume = 0;
     currentBgmAudio = newAudio;
@@ -86,7 +114,7 @@ function switchBgm(newTrack) {
 
         if (step >= fadeOutSteps) {
             const inStep = step - fadeOutSteps;
-            const target = getBgmTargetVolume();
+            const target = getBgmTargetVolume(newTrack);
             const ratio = Math.min(1, inStep / fadeInSteps);
             newAudio.volume = Math.min(1, target * ratio);
 
@@ -204,7 +232,7 @@ function updateBgmVolume(val) {
     const text = document.getElementById('bgm-volume-text');
     if (text) text.innerText = `${bgmVolume}%`;
     if (currentBgmAudio && !bgmFadeInterval) {
-        currentBgmAudio.volume = getBgmTargetVolume();
+        currentBgmAudio.volume = getBgmTargetVolume(currentBgmTrack);
     }
 }
 
@@ -270,15 +298,33 @@ function generateColumns(startC, count) {
 }
 
 function placeMinesInChunk(startC, endC, safeR = -1, safeC = -1) {
-    const totalCellsInChunk = ROWS * (endC - startC);
-    let minesToPlace = Math.floor(totalCellsInChunk * MINE_RATIO);
+    if (startC >= endC) return;
+
+    let curStart = startC;
+    while (curStart < endC) {
+        const isDz = isDzPos(curStart);
+        let curEnd = curStart + 1;
+        while (curEnd < endC && isDzPos(curEnd) === isDz) {
+            curEnd++;
+        }
+        placeMinesInRange(curStart, curEnd, isDz, safeR, safeC);
+        curStart = curEnd;
+    }
+}
+
+function placeMinesInRange(rangeStartC, rangeEndC, isDz, safeR = -1, safeC = -1) {
+    const totalCells = ROWS * (rangeEndC - rangeStartC);
+    const ratio = isDz
+        ? Math.min(MINE_RATIO_MAX, MINE_RATIO * DZ_MINE_RATIO_MULT)
+        : MINE_RATIO;
+    let minesToPlace = Math.floor(totalCells * ratio);
     let placed = 0;
     let attempts = 0;
 
     while (placed < minesToPlace && attempts < 10000) {
         attempts++;
         const r = Math.floor(Math.random() * ROWS);
-        const c = startC + Math.floor(Math.random() * (endC - startC));
+        const c = rangeStartC + Math.floor(Math.random() * (rangeEndC - rangeStartC));
 
         const cell = getCell(r, c);
         if (!cell || cell.isMine) continue;
@@ -343,6 +389,9 @@ function renderBoard() {
             cellBtn.id = `cell-${r}-${c}`;
             
             let classList = 'cell-btn cell-unopened';
+            if (isDzPos(c)) {
+                classList += ' dz';
+            }
 
             // Frontline indicator (left vertical continuous line)
             if (c === distance) {

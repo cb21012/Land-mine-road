@@ -50,8 +50,17 @@ body {
     box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.15), 2px 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+.cell-unopened.dz {
+    background: linear-gradient(145deg, #553333, #3b1e1e) !important;
+    box-shadow: inset 1px 1px 1px rgba(255, 200, 200, 0.15), 2px 2px 4px rgba(40, 0, 0, 0.4) !important;
+}
+
 .cell-unopened:hover {
     background: linear-gradient(145deg, #475569, #334155);
+}
+
+.cell-unopened.dz:hover {
+    background: linear-gradient(145deg, #7a5650, #64473c) !important;
 }
 
 .cell-opened {
@@ -418,20 +427,23 @@ body {
 
     /* バッジを回転後の見た目上の上側（元の右端側）に正立して配置 */
     .line-badge {
+        position: absolute;
         top: auto;
         left: auto;
-        right: 0.9rem;
-        font-size: 1.25rem;
         width: max-content;
-        text-align: right;
+        white-space: nowrap;
+        transform: translateX(-100%);
+        transform-origin: left center;
+        font-size: 1.5rem;
     }
 
     .badge-frontline {
-        bottom: 3.2rem;
+        bottom: 2.2rem;
     }
 
     .badge-checkline {
-        bottom: 3.6rem;
+        bottom: 2rem;
+        right: -3.6rem;
     }
 }
 
