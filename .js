@@ -1,15 +1,15 @@
 // Infinite Road Minesweeper Logic
 const ROWS = 13;
 const VIEW_COLS = 33;
-const MINE_RATIO = 0.02;
+const MINE_RATIO = 0.05;
 const MINE_RATIO_MAX = 0.4;
 const INITIAL_GEN_LEN = 100;
 const CHUNK_GEN_LEN = 50;
 const progressSpeed = 20;
-const AREA_LENGTH = 300;
-const DZ_START_POS = 200;
-const DZ_END_POS = 299;
-const DZ_MINE_RATIO_MULT = 1.8;
+const AREA_LENGTH = 200;
+const DZ_START_POS = 150;
+const DZ_END_POS = 199;
+const DZ_MINE_RATIO_MULT = 1.5;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let district = 1;
