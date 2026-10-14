@@ -260,6 +260,34 @@ body {
 .lang-btn {position: fixed; top: 76px; right: 8px;}
 .restart-btn {position: fixed; top: 112px; right: 8px;}
 
+.start-checkpoint-control {
+    position: fixed;
+    top: 52px;
+    left: 12px;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .375rem .5rem;
+    border: 1px solid #334155;
+    border-radius: .5rem;
+    background-color: rgba(15, 23, 42, .95);
+    color: #cbd5e1;
+    font-size: .875rem;
+}
+
+.start-checkpoint-control[hidden] {
+    display: none;
+}
+
+.start-checkpoint-control select {
+    padding: .25rem .375rem;
+    border: 1px solid #475569;
+    border-radius: .25rem;
+    background-color: #1e293b;
+    color: #f1f5f9;
+}
+
 .restart-btn:hover, .lang-btn:hover {
     background: linear-gradient(to right, #2dd4bf, #06b6d4);
     box-shadow: 0 10px 15px -3px rgba(34, 211, 238, .2);
@@ -283,6 +311,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-around;
+}
+
+.district-stats-bar {
+    position: fixed;
+    top: 16px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 6px 12px;
+    background-color: rgba(15, 23, 42, .8);
+    border: 1px solid #1e293b;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
+    width: 200px;
 }
 
 .stat {
@@ -322,6 +365,23 @@ body {
 
 .speed-value {
     color: #fb7185;
+}
+
+.district-value {
+    color: #a5b4fc;
+    text-align: center;
+}
+
+.mine-rate-value {
+    color: #f87171;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .stats-bar {
+        min-width: 0;
+        width: calc(100vw - 1.5rem);
+    }
 }
 
 .board-container {
@@ -380,6 +440,12 @@ body {
     box-shadow: 0 0 6px rgba(234, 179, 8, 0.7);
 }
 
+.checkpoint-marker {
+    left: -1px;
+    background-color: #22d3ee;
+    box-shadow: 0 0 6px rgba(34, 211, 238, 0.8);
+}
+
 .line-badge {
     position: absolute;
     top: -26px;
@@ -403,6 +469,12 @@ body {
 .badge-checkline {
     right: -3px;
     background-color: #eab308;
+    color: #020617;
+}
+
+.badge-checkpoint {
+    left: -3px;
+    background-color: #22d3ee;
     color: #020617;
 }
 
@@ -444,6 +516,11 @@ body {
     .badge-checkline {
         bottom: 2rem;
         right: -3.6rem;
+    }
+
+    .badge-checkpoint {
+        bottom: 2rem;
+        left: -3.6rem;
     }
 }
 

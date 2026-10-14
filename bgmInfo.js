@@ -1,5 +1,5 @@
 window.bgmInfos = {
-    0: {name: "bgm_dz", title: "Rituale Machina", author: "Peritune", license: "Peritune", volume: 0.7},
+    0: {name: "bgm_dz", title: "Rituale Machina", author: "Peritune", license: "Peritune", volume: 0.55},
     1: {name: "bgm1", title: "Acoustic36", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.6},
     2: {name: "bgm2", title: "Dual Illusions", author: "Peritune", license: "CC BY 4.0", volume: 0.6},
     3: {name: "bgm3", title: "Betters days are Coming (Lo-Fi Ver.)", author: "CleytonKauffman", license: "CC0", volume: 1.6},

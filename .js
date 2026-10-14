@@ -1,33 +1,31 @@
-// Infinite Road Minesweeper Logic
-const ROWS = 13;
-const VIEW_COLS = 33;
-const MINE_RATIO = 0.01;
+//Const
+const ROWS = 13, VIEW_COLS = 33;
+const INIT_MINE_RATIO = 0.05;
+const DISTRICT_MINE_RATIO = [.05, .075, .1, .12, .137, .152, .167, .178, .187, .194, .2, .203, .206, .209, .212, .215, .218, .22, .222];
 const MINE_RATIO_MAX = 0.4;
-const INITIAL_GEN_LEN = 100;
+const INITIAL_GEN_LEN = 150;
 const CHUNK_GEN_LEN = 50;
-const progressSpeed = 200;
-const AREA_LENGTH = 200;
-const DZ_START_POS = 150;
-const DZ_END_POS = 199;
-const DZ_MINE_RATIO_MULT = 5.5;
+const progressSpeed = 30;
+const AREA_LENGTH = 1600;
+const CHECKPOINT_FREQ = 200;
+const DZ_START_POS = 1500;
+const DZ_END_POS = 1599;
+const DZ_MINE_RATIO_MULT = 1.5;
 
-let distance = 0; // Current frontline column index (0-indexed meters)
-let district = 1;
+//Map
 let maxGeneratedCol = 0;
 let boardMap = new Map(); // Key: `${r},${c}` -> cell object
-let isFirstClick = true;
-let isGameOver = false;
-let isSliding = false; // Lock flag during 0.1s/m slide animation
-let clicksCount = 0;
-let timerSeconds = 0;
-let moveSpeed = 0; // km per hour
-let score = 0;
-let timerInterval = null;
-let lastUpdTime = 0;
-let isFlagModeMobile = false;
-let seVolume = 60;
-let bgmVolume = 60;
-let clang = (localStorage.getItem('Lmr_lang') ?? 0);
+
+//Bools
+let isFirstClick = true, isGameOver = false, isSliding = false, isFlagModeMobile = false;
+
+//Game
+let distance = 0, district = 1, mineRate = INIT_MINE_RATIO, clicksCount = 0, timerSeconds = 0;
+let moveSpeed = 0, score = 0, timerInterval = null, lastUpdTime = 0;
+let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistrict = 1;
+
+//Config
+let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 0);
 
 // BGM Audio Controller
 let currentBgmAudio = null;
@@ -70,6 +68,19 @@ function getExpectedBgmTrack(dist) {
 function isDzPos(pos) {
     const mod = ((pos % AREA_LENGTH) + AREA_LENGTH) % AREA_LENGTH;
     return mod >= DZ_START_POS && mod <= DZ_END_POS;
+}
+
+function getMineRateAtDistance(pos) {
+    const districtIndex = Math.floor(pos / AREA_LENGTH);
+    const lastDistrictIndex = DISTRICT_MINE_RATIO.length - 1;
+    const startRate = DISTRICT_MINE_RATIO[districtIndex] ?? DISTRICT_MINE_RATIO[lastDistrictIndex];
+    const endRate = DISTRICT_MINE_RATIO[districtIndex + 1] ?? startRate;
+    const distanceInDistrict = Math.floor((pos - districtIndex * AREA_LENGTH) / CHECKPOINT_FREQ) * CHECKPOINT_FREQ;
+    return startRate + (endRate - startRate) * (distanceInDistrict / AREA_LENGTH);
+}
+
+function updateMineRate() {
+    mineRate = getMineRateAtDistance(distance);
 }
 
 function startOrUpdateBgm() {
@@ -189,6 +200,13 @@ function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
     document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
+    document.getElementById("district-label").textContent = ja ? "地区" : "District";
+    document.getElementById("mine-rate-label").textContent = ja ? "地雷率" : "Mine rate";
+    document.getElementById("start-district-label").textContent = ja ? "地区" : "District";
+    document.getElementById("start-checkpoint-label").textContent = ja ? "距離" : "Distance";
+    document.querySelectorAll("#start-district option").forEach((option) => {
+        option.textContent = `${ja ? "地区" : "District"} ${option.value}`;
+    });
     document.getElementById("final-speed-label").textContent = ja ? "速度" : "SPEED";
     document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
@@ -203,6 +221,7 @@ function updateTexts() {
 
 window.onload = () => {
     initVolume();
+    updateTexts();
     resetGame();
 };
 
@@ -261,13 +280,43 @@ function resetGame() {
     timerInterval = null;
     timerSeconds = 0;
     clicksCount = 0;
-    distance = 0;
+    const savedCheckpointCount = Number.parseInt(localStorage.getItem('Lmr_passedCP') ?? '0', 10);
+    passedCheckpointCount = Number.isInteger(savedCheckpointCount) && savedCheckpointCount >= 0
+        ? savedCheckpointCount
+        : 0;
+    selectedStartDistrict = Math.min(selectedStartDistrict, getMaxUnlockedDistrict());
+    const firstCheckpoint = getDistrictFirstCheckpoint(selectedStartDistrict);
+    const lastCheckpoint = getDistrictLastCheckpoint(selectedStartDistrict);
+    selectedStartCheckpoint = Math.max(firstCheckpoint, Math.min(selectedStartCheckpoint, lastCheckpoint));
+    distance = selectedStartCheckpoint * CHECKPOINT_FREQ;
+    updateMineRate();
     moveSpeed = 0;
     maxGeneratedCol = 0;
     boardMap.clear();
     isFirstClick = true;
     isGameOver = false;
     isSliding = false;
+
+    const startCheckpointSelect = document.getElementById('start-checkpoint');
+    const startDistrictSelect = document.getElementById('start-district');
+    const startCheckpointControl = document.getElementById('start-checkpoint-control');
+    if (startCheckpointControl) startCheckpointControl.hidden = false;
+    if (startDistrictSelect) {
+        startDistrictSelect.replaceChildren();
+        for (let unlockedDistrict = 1; unlockedDistrict <= getMaxUnlockedDistrict(); unlockedDistrict++) {
+            const option = document.createElement('option');
+            option.value = String(unlockedDistrict);
+            option.textContent = `${clang === 1 ? '地区' : 'District'} ${unlockedDistrict}`;
+            startDistrictSelect.appendChild(option);
+        }
+        startDistrictSelect.value = String(selectedStartDistrict);
+        startDistrictSelect.disabled = false;
+    }
+    if (startCheckpointSelect) {
+        populateStartCheckpointOptions(startCheckpointSelect);
+        startCheckpointSelect.value = String(selectedStartCheckpoint);
+        startCheckpointSelect.disabled = false;
+    }
 
     const boardEl = document.getElementById('board');
     if (boardEl) {
@@ -276,11 +325,54 @@ function resetGame() {
         boardEl.style.transition = 'none';
     }
 
-    // Generate initial 100m (columns 0..99)
-    generateColumns(0, INITIAL_GEN_LEN);
-
+    const generatedStartCol = getStartCol();
+    generateColumns(generatedStartCol, INITIAL_GEN_LEN + distance - generatedStartCol);
     updateStatsDisplay();
     renderBoard();
+}
+
+function getMaxUnlockedDistrict() {
+    return Math.floor((passedCheckpointCount * CHECKPOINT_FREQ) / AREA_LENGTH) + 1;
+}
+
+function getDistrictFirstCheckpoint(districtNumber) {
+    return Math.floor(((districtNumber - 1) * AREA_LENGTH) / CHECKPOINT_FREQ);
+}
+
+function getDistrictLastCheckpoint(districtNumber) {
+    const lastDistanceInDistrict = districtNumber * AREA_LENGTH - CHECKPOINT_FREQ;
+    return Math.min(Math.floor(lastDistanceInDistrict / CHECKPOINT_FREQ), passedCheckpointCount);
+}
+
+function populateStartCheckpointOptions(select) {
+    select.replaceChildren();
+    const firstCheckpoint = getDistrictFirstCheckpoint(selectedStartDistrict);
+    const lastCheckpoint = getDistrictLastCheckpoint(selectedStartDistrict);
+    for (let checkpoint = firstCheckpoint; checkpoint <= lastCheckpoint; checkpoint++) {
+        const option = document.createElement('option');
+        option.value = String(checkpoint);
+        option.textContent = `${checkpoint * CHECKPOINT_FREQ}m`;
+        select.appendChild(option);
+    }
+}
+
+function changeStartDistrict(value) {
+    if (!isFirstClick || isGameOver || isSliding) return;
+    const newDistrict = Number.parseInt(value, 10);
+    if (!Number.isInteger(newDistrict) || newDistrict < 1 || newDistrict > getMaxUnlockedDistrict()) return;
+    selectedStartDistrict = newDistrict;
+    selectedStartCheckpoint = getDistrictFirstCheckpoint(newDistrict);
+    resetGame();
+}
+
+function changeStartCheckpoint(value) {
+    if (!isFirstClick || isGameOver || isSliding) return;
+    const checkpoint = Number.parseInt(value, 10);
+    if (!Number.isInteger(checkpoint)
+        || checkpoint < getDistrictFirstCheckpoint(selectedStartDistrict)
+        || checkpoint > getDistrictLastCheckpoint(selectedStartDistrict)) return;
+    selectedStartCheckpoint = checkpoint;
+    resetGame();
 }
 
 function getCell(r, c) {
@@ -326,29 +418,23 @@ function placeMinesInChunk(startC, endC, safeR = -1, safeC = -1) {
 }
 
 function placeMinesInRange(rangeStartC, rangeEndC, isDz, safeR = -1, safeC = -1) {
-    const totalCells = ROWS * (rangeEndC - rangeStartC);
-    const ratio = isDz
-        ? Math.min(MINE_RATIO_MAX, MINE_RATIO * DZ_MINE_RATIO_MULT)
-        : MINE_RATIO;
-    let minesToPlace = Math.floor(totalCells * ratio);
-    let placed = 0;
-    let attempts = 0;
+    for (let c = rangeStartC; c < rangeEndC; c++) {
+        const columnMineRate = getMineRateAtDistance(c);
+        const ratio = isDz
+            ? Math.min(MINE_RATIO_MAX, columnMineRate * DZ_MINE_RATIO_MULT)
+            : columnMineRate;
 
-    while (placed < minesToPlace && attempts < 10000) {
-        attempts++;
-        const r = Math.floor(Math.random() * ROWS);
-        const c = rangeStartC + Math.floor(Math.random() * (rangeEndC - rangeStartC));
+        for (let r = 0; r < ROWS; r++) {
+            const cell = getCell(r, c);
+            if (!cell || cell.isMine) continue;
 
-        const cell = getCell(r, c);
-        if (!cell || cell.isMine) continue;
+            if (safeR >= 0 && safeC >= 0
+                && Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
 
-        // Safe Zone for initial click
-        if (safeR >= 0 && safeC >= 0) {
-            if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+            if (Math.random() < ratio) {
+                cell.isMine = true;
+            }
         }
-
-        cell.isMine = true;
-        placed++;
     }
 }
 
@@ -418,6 +504,11 @@ function renderBoard() {
                 lineIndicator.className = 'line-marker checkline-marker';
                 cellBtn.appendChild(lineIndicator);
             }
+            if (c > 0 && c % CHECKPOINT_FREQ === 0) {
+                const checkpointMarker = document.createElement('span');
+                checkpointMarker.className = 'line-marker checkpoint-marker';
+                cellBtn.appendChild(checkpointMarker);
+            }
 
             cellBtn.className = classList;
 
@@ -433,6 +524,12 @@ function renderBoard() {
                     const badge = document.createElement('span');
                     badge.className = 'line-badge badge-checkline';
                     badge.innerText = `${currentCheckOpened}/65`;
+                    cellBtn.appendChild(badge);
+                }
+                if (c > 0 && c % CHECKPOINT_FREQ === 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'line-badge badge-checkpoint';
+                    badge.innerText = `${c}m`;
                     cellBtn.appendChild(badge);
                 }
             }
@@ -492,10 +589,14 @@ async function handleCellClick(r, c) {
 
     if (isFirstClick) {
         isFirstClick = false;
+        document.getElementById('start-checkpoint-control').hidden = true;
+        document.getElementById('start-checkpoint').disabled = true;
+        document.getElementById('start-district').disabled = true;
         startTimer();
         startOrUpdateBgm();
-        placeMinesInChunk(0, maxGeneratedCol, r, c);
-        recalculateNeighborMines(0, maxGeneratedCol);
+        const generatedStartCol = getStartCol();
+        placeMinesInChunk(generatedStartCol, maxGeneratedCol, r, c);
+        recalculateNeighborMines(generatedStartCol, maxGeneratedCol);
     }
 
     if (cell.isOpen) {
@@ -623,9 +724,30 @@ async function checkAdvanceAnimated() {
         await animateSlideStep();
 
         distance++;
+        if (distance % CHECKPOINT_FREQ === 0) updateMineRate();
+        if (distance % CHECKPOINT_FREQ === 0 && distance / CHECKPOINT_FREQ > passedCheckpointCount) {
+            passedCheckpointCount = distance / CHECKPOINT_FREQ;
+            selectedStartDistrict = Math.floor(distance / AREA_LENGTH) + 1;
+            selectedStartCheckpoint = passedCheckpointCount;
+            localStorage.setItem('Lmr_passedCP', String(passedCheckpointCount));
+            const startDistrictSelect = document.getElementById('start-district');
+            if (startDistrictSelect && !Array.from(startDistrictSelect.options)
+                .some((option) => Number.parseInt(option.value, 10) === selectedStartDistrict)) {
+                const option = document.createElement('option');
+                option.value = String(selectedStartDistrict);
+                option.textContent = `${clang === 1 ? '地区' : 'District'} ${selectedStartDistrict}`;
+                startDistrictSelect.appendChild(option);
+            }
+            if (startDistrictSelect) startDistrictSelect.value = String(selectedStartDistrict);
+            const startCheckpointSelect = document.getElementById('start-checkpoint');
+            if (startCheckpointSelect) {
+                populateStartCheckpointOptions(startCheckpointSelect);
+                startCheckpointSelect.value = String(selectedStartCheckpoint);
+            }
+        }
         startOrUpdateBgm();
 
-        if (distance + 50 > maxGeneratedCol) {
+        if (distance + (INITIAL_GEN_LEN-CHUNK_GEN_LEN) > maxGeneratedCol) {
             generateColumns(maxGeneratedCol, CHUNK_GEN_LEN);
         }
 
@@ -673,10 +795,13 @@ function incrementClick() {
 }
 
 function updateStatsDisplay() {
+    district = Math.floor(distance / AREA_LENGTH) + 1;
     document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${distance}m`;
     document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
     document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock text-cyan-400"></i> ${formatTime(timerSeconds)}`;
     document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i> ${formatMoveSpeed()}`;
+    document.getElementById('district-count').textContent = String(district);
+    document.getElementById('mine-rate').textContent = `${(mineRate * 100).toFixed(2)}%`;
 }
 
 function formatMoveSpeed() {
@@ -779,4 +904,5 @@ function closeModalAndReset() {
     }, 300);
 }
 
+resetGame()
 updateTexts()
