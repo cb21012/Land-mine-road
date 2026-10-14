@@ -1,15 +1,15 @@
 // Infinite Road Minesweeper Logic
 const ROWS = 13;
 const VIEW_COLS = 33;
-const MINE_RATIO = 0.05;
+const MINE_RATIO = 0.01;
 const MINE_RATIO_MAX = 0.4;
 const INITIAL_GEN_LEN = 100;
 const CHUNK_GEN_LEN = 50;
-const progressSpeed = 20;
+const progressSpeed = 200;
 const AREA_LENGTH = 200;
 const DZ_START_POS = 150;
 const DZ_END_POS = 199;
-const DZ_MINE_RATIO_MULT = 1.5;
+const DZ_MINE_RATIO_MULT = 5.5;
 
 let distance = 0; // Current frontline column index (0-indexed meters)
 let district = 1;
@@ -46,11 +46,21 @@ function getBgmInfoByName(name) {
     return Object.values(window.bgmInfos).find(b => b.name === name) || null;
 }
 
+function showBgmNotification(trackName) {
+    const info = getBgmInfoByName(trackName);
+    const notification = document.getElementById('bgm-notification');
+    if (!info || !notification) return;
+
+    notification.textContent = `♪${info.title} - ${info.author}`;
+    notification.classList.remove('is-playing');
+    void notification.offsetWidth;
+    notification.classList.add('is-playing');
+}
+
 function getExpectedBgmTrack(dist) {
     if (isDzPos(dist)) return 'bgm_dz';
-    const d = Math.floor(dist / AREA_LENGTH);
     // district番号のbgmが存在するか確認 (bgm{d})
-    const trackName = `bgm${d}`;
+    const trackName = `bgm${district}`;
     if (window.bgmInfos && getBgmInfoByName(trackName)) {
         return trackName;
     }
@@ -82,6 +92,7 @@ function switchBgm(newTrack) {
     currentBgmTrack = newTrack;
 
     const info = getBgmInfoByName(newTrack);
+    showBgmNotification(newTrack);
     const filePath = `sebgm/${info ? info.name : newTrack}.ogg`;
     const newAudio = new Audio(filePath);
     newAudio.loop = true;
@@ -168,6 +179,8 @@ function stopBgmImmediately() {
         currentBgmAudio = null;
     }
     currentBgmTrack = null;
+    const notification = document.getElementById('bgm-notification');
+    if (notification) notification.classList.remove('is-playing');
 }
 
 function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.setItem('Lmr_lang', clang)}

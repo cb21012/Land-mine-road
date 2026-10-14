@@ -455,6 +455,45 @@ body {
     text-align: center;
 }
 
+.bgm-notification {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    z-index: 40;
+    max-width: calc(100vw - 24px);
+    padding: .5rem .75rem;
+    border: 1px solid rgba(148, 163, 184, .3);
+    border-radius: .5rem;
+    background-color: rgba(15, 23, 42, .9);
+    color: #f1f5f9;
+    font-size: .875rem;
+    line-height: 1.25rem;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bgm-notification.is-playing {
+    animation: bgm-notification 7s forwards;
+}
+
+@keyframes bgm-notification {
+    0% {
+        opacity: 0;
+        animation-timing-function: ease-in;
+    }
+    14.2857% {
+        opacity: 1;
+        animation-timing-function: linear;
+    }
+    57.1429% {
+        opacity: 1;
+        animation-timing-function: ease-out;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 .modal {
     position: fixed;
     inset: 0;
