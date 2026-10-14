@@ -1,13 +1,13 @@
 //Const
 const ROWS = 13, VIEW_COLS = 33;
 const INIT_MINE_RATIO = 0.05;
-const DISTRICT_MINE_RATIO = [.05, .075, .1, .12, .137, .152, .167, .178, .187, .194, .2, .203, .206, .209, .212, .215, .218, .22, .222];
-const MINE_RATIO_MAX = 0.4;
+const DISTRICT_MINE_RATIO = [.05, .07, .085, .1, .113, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
+const MINE_RATIO_MAX = 0.24;
 const INITIAL_GEN_LEN = 150;
 const CHUNK_GEN_LEN = 50;
 const progressSpeed = 30;
 const AREA_LENGTH = 1600;
-const CHECKPOINT_FREQ = 200;
+const CHECKPOINT_FREQ = 100;
 const DZ_START_POS = 1500;
 const DZ_END_POS = 1599;
 const DZ_MINE_RATIO_MULT = 1.5;
@@ -23,6 +23,7 @@ let isFirstClick = true, isGameOver = false, isSliding = false, isFlagModeMobile
 let distance = 0, district = 1, mineRate = INIT_MINE_RATIO, clicksCount = 0, timerSeconds = 0;
 let moveSpeed = 0, score = 0, timerInterval = null, lastUpdTime = 0;
 let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistrict = 1;
+let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
 
 //Config
 let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 0);
@@ -289,6 +290,7 @@ function resetGame() {
     const lastCheckpoint = getDistrictLastCheckpoint(selectedStartDistrict);
     selectedStartCheckpoint = Math.max(firstCheckpoint, Math.min(selectedStartCheckpoint, lastCheckpoint));
     distance = selectedStartCheckpoint * CHECKPOINT_FREQ;
+    startDistance = distance; // スタート位置を記録
     updateMineRate();
     moveSpeed = 0;
     maxGeneratedCol = 0;
@@ -796,16 +798,18 @@ function incrementClick() {
 
 function updateStatsDisplay() {
     district = Math.floor(distance / AREA_LENGTH) + 1;
-    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${distance}m`;
+    const traveledDistance = distance - startDistance;
+    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${traveledDistance}m`;
     document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
     document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock text-cyan-400"></i> ${formatTime(timerSeconds)}`;
     document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i> ${formatMoveSpeed()}`;
     document.getElementById('district-count').textContent = String(district);
-    document.getElementById('mine-rate').textContent = `${(mineRate * 100).toFixed(2)}%`;
+    document.getElementById('mine-rate').textContent = `${(mineRate * 100 * (isDzPos(distance) ? DZ_MINE_RATIO_MULT : 1)).toFixed(2)}%`;
 }
 
 function formatMoveSpeed() {
-    moveSpeed = timerSeconds > 0 ? distance * 3.6 / timerSeconds : 0;
+    const traveledDistance = distance - startDistance;
+    moveSpeed = timerSeconds > 0 ? traveledDistance * 3.6 / timerSeconds : 0;
     return moveSpeed>1 ? `${moveSpeed.toFixed(2)} km/h` : `${(moveSpeed*1e3).toFixed(1)} m/h`
 }
 
