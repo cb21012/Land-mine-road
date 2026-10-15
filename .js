@@ -21,8 +21,21 @@ let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistric
 let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
 
 //player
-let level = (localStorage.getItem('Lmr_level') ?? 0), xp = (localStorage.getItem('Lmr_xp') ?? 0);
-let nextXp = 0, mhp = Math.floor(0.01*level**2 + level + 90), hp = mhp, regen = Number((level*0.02 + 1).toFixed(2));
+let level = Number(localStorage.getItem('Lmr_level') ?? 0), xp = Number(localStorage.getItem('Lmr_xp') ?? 0);
+let nextXp = 0;
+let isScoreCommitted = false;
+let lastGainedXp = 0;
+let lastLevelUpCount = 0;
+
+function updatePlayerStats() {
+    getPlayerNextXp();
+    mhp = Math.floor(0.01*level**2 + level + 90);
+    regen = Number((level*0.02 + 1).toFixed(2));
+}
+
+let mhp = 90, hp = 90, regen = 1.00;
+updatePlayerStats();
+hp = mhp;
 
 //Config
 let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 0);
@@ -42,6 +55,65 @@ function notatVal(val) {
 
 function getPlayerNextXp() {
     nextXp = Math.ceil(1e-4*level**3 + 0.25*level**2 + level*16 + 48);
+}
+
+function commitScoreAsXp() {
+    if (isScoreCommitted) return { gainedXp: 0, leveledUp: false, startLevel: level, endLevel: level };
+
+    const gainedXp = Math.round(score);
+    const startLevel = level;
+    let leveledUp = false;
+
+    if (gainedXp > 0) {
+        xp += gainedXp;
+        while (xp >= nextXp) {
+            xp -= nextXp;
+            level++;
+            getPlayerNextXp();
+            leveledUp = true;
+        }
+        updatePlayerStats();
+        localStorage.setItem('Lmr_level', String(level));
+        localStorage.setItem('Lmr_xp', String(xp));
+    }
+
+    isScoreCommitted = true;
+    lastGainedXp = gainedXp;
+    lastLevelUpCount = level - startLevel;
+
+    updatePlayerDisplay();
+
+    return {
+        gainedXp,
+        leveledUp,
+        startLevel,
+        endLevel: level
+    };
+}
+
+function showLevelUpNotification(newLevel) {
+    const notification = document.getElementById('levelup-notification');
+    if (!notification) return;
+    const ja = clang === 1;
+    notification.textContent = ja ? `★ レベルアップ！ Lv.${newLevel}` : `★ LEVEL UP! Lv.${newLevel}`;
+    notification.classList.remove('is-showing');
+    void notification.offsetWidth;
+    notification.classList.add('is-showing');
+}
+
+function updatePlayerDisplay() {
+    const levelEl = document.getElementById('level-value');
+    const xpValueEl = document.getElementById('xp-value');
+    const xpBarEl = document.getElementById('xp-bar');
+    const regenValueEl = document.getElementById('regen-value');
+
+    if (levelEl) levelEl.textContent = String(level);
+    if (xpValueEl) xpValueEl.textContent = `${notatVal(Math.floor(xp))} / ${notatVal(nextXp)} XP`;
+    if (xpBarEl) {
+        const pct = nextXp > 0 ? Math.min(100, Math.max(0, (xp / nextXp) * 100)) : 0;
+        xpBarEl.style.width = `${pct}%`;
+    }
+    if (regenValueEl) regenValueEl.textContent = `(+${regen.toFixed(2)}/m)`;
 }
 
 function getBgmTargetVolume(trackName) {
@@ -224,6 +296,14 @@ function updateTexts() {
     document.querySelectorAll("#start-district option").forEach((option) => {
         option.textContent = `${ja ? "地区" : "District"} ${option.value}`;
     });
+    const finalScoreLabel = document.getElementById("final-score-label");
+    if (finalScoreLabel) finalScoreLabel.textContent = ja ? "スコア" : "SCORE";
+    const finalDistLabel = document.getElementById("final-distance-label");
+    if (finalDistLabel) finalDistLabel.textContent = ja ? "距離" : "DISTANCE";
+    const modalLevelLabel = document.getElementById("modal-level-label");
+    if (modalLevelLabel) modalLevelLabel.innerHTML = `${ja ? "レベル" : "LEVEL"} <span id="modal-level-val">${level}</span>`;
+    const levelLabel = document.getElementById("level-label");
+    if (levelLabel) levelLabel.textContent = ja ? "Lv" : "LV";
     document.getElementById("final-speed-label").textContent = ja ? "速度" : "SPEED";
     document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
@@ -233,7 +313,8 @@ function updateTexts() {
         `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう<br>
         クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` : 
         `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
-        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`
+        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`;
+    updatePlayerDisplay();
 }
 
 window.onload = () => {
@@ -292,12 +373,23 @@ function playMineSe() {
 }
 
 function resetGame() {
+    if (!isScoreCommitted && score > 0) {
+        const result = commitScoreAsXp();
+        if (result.leveledUp) {
+            showLevelUpNotification(result.endLevel);
+        }
+    }
+    isScoreCommitted = false;
+    lastGainedXp = 0;
+    lastLevelUpCount = 0;
+
     stopBgmImmediately();
     clearInterval(timerInterval);
     timerInterval = null;
     timerSeconds = 0;
     clicksCount = 0;
     score = 0;
+    updatePlayerStats();
     hp = mhp;
     const savedCheckpointCount = Number.parseInt(localStorage.getItem('Lmr_passedCP') ?? '0', 10);
     passedCheckpointCount = Number.isInteger(savedCheckpointCount) && savedCheckpointCount >= 0
@@ -348,6 +440,7 @@ function resetGame() {
     const generatedStartCol = getStartCol();
     generateColumns(generatedStartCol, INITIAL_GEN_LEN + distance - generatedStartCol);
     updateStatsDisplay();
+    updatePlayerDisplay();
     renderBoard();
 }
 
@@ -886,8 +979,9 @@ function triggerGameOver(explodedCell) {
     stopBgmGameOver();
     isGameOver = true;
     clearInterval(timerInterval);
-    updateStatsDisplay();
     score = Math.round(score);
+    commitScoreAsXp();
+    updateStatsDisplay();
 
     if (explodedCell) {
         explodedCell.justExploded = true;
@@ -923,6 +1017,35 @@ function showModal() {
     document.getElementById('final-distance').innerText = `${distance}m`;
     document.getElementById('final-speed').innerText = String(formatMoveSpeed());
     document.getElementById('final-score').innerText = String(score);
+
+    const modalXpGain = document.getElementById('modal-xp-gain');
+    if (modalXpGain) {
+        modalXpGain.innerText = `+${lastGainedXp} XP`;
+    }
+    const modalLevelVal = document.getElementById('modal-level-val');
+    if (modalLevelVal) {
+        modalLevelVal.innerText = String(level);
+    }
+    const modalXpBar = document.getElementById('modal-xp-bar');
+    if (modalXpBar) {
+        const pct = nextXp > 0 ? Math.min(100, Math.max(0, (xp / nextXp) * 100)) : 0;
+        modalXpBar.style.width = `${pct}%`;
+    }
+    const modalXpSubText = document.getElementById('modal-xp-sub-text');
+    if (modalXpSubText) {
+        modalXpSubText.innerText = `${notatVal(Math.floor(xp))} / ${notatVal(nextXp)} XP`;
+    }
+    const levelUpBadge = document.getElementById('modal-level-up-badge');
+    if (levelUpBadge) {
+        if (lastLevelUpCount > 0) {
+            levelUpBadge.style.display = 'inline-block';
+            levelUpBadge.innerText = clang === 1 
+                ? (lastLevelUpCount > 1 ? `レベル+${lastLevelUpCount} UP!` : 'レベルアップ！') 
+                : (lastLevelUpCount > 1 ? `LEVEL +${lastLevelUpCount} UP!` : 'LEVEL UP!');
+        } else {
+            levelUpBadge.style.display = 'none';
+        }
+    }
 
     modal.classList.add('visible');
     setTimeout(() => {

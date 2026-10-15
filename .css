@@ -377,14 +377,22 @@ body {
     text-align: center;
 }
 
-.hp-gauge {
+.player-status-container {
     position: fixed;
-    bottom: 4rem;
+    bottom: 3.5rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 40;
     width: min(280px, calc(100vw - 2rem));
-    padding: .4rem .6rem;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.xp-gauge,
+.hp-gauge {
+    width: 100%;
+    padding: .35rem .6rem;
     border: 1px solid #334155;
     border-radius: .5rem;
     background-color: rgba(15, 23, 42, .9);
@@ -392,18 +400,56 @@ body {
     font-family: 'Share Tech Mono', monospace;
 }
 
+.xp-gauge {
+    border-color: rgba(129, 140, 248, 0.4);
+    background-color: rgba(15, 23, 42, 0.95);
+}
+
+.xp-gauge-label,
 .hp-gauge-label {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: .25rem;
     font-size: .75rem;
 }
 
+.level-badge {
+    color: #a78bfa;
+    font-weight: 700;
+}
+
+.gauge-sub {
+    color: #94a3b8;
+    font-size: .7rem;
+}
+
+.regen-sub {
+    font-size: .65rem;
+    color: #4ade80;
+    margin-left: .25rem;
+}
+
+.xp-bar-track,
 .hp-bar-track {
-    height: .5rem;
+    height: .45rem;
     overflow: hidden;
     border-radius: 999px;
     background-color: #334155;
+}
+
+.xp-bar-track {
+    background-color: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.xp-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+    transition: width .2s ease;
 }
 
 .hp-bar {
@@ -412,6 +458,37 @@ body {
     border-radius: inherit;
     background-color: #22c55e;
     transition: width .15s ease, background-color .15s ease;
+}
+
+.levelup-notification {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    padding: .5rem 1.25rem;
+    border: 1px solid #a855f7;
+    border-radius: .5rem;
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(88, 28, 135, 0.95));
+    color: #f3e8ff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.levelup-notification.is-showing {
+    animation: levelup-anim 3s forwards;
+}
+
+@keyframes levelup-anim {
+    0% { opacity: 0; transform: translate(-50%, -10px) scale(0.9); }
+    15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+    25% { transform: translate(-50%, 0) scale(1); }
+    80% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -10px); }
 }
 
 @media (max-width: 640px) {
@@ -676,6 +753,50 @@ body {
     gap: .25rem;
     padding: 0.35rem;
     background-color: #020617;
+}
+
+.modal-xp-gain {
+    font-size: .875rem;
+    color: #a855f7;
+    font-weight: 700;
+}
+
+.modal-level-panel {
+    background-color: #020617;
+    padding: .35rem .6rem;
+    margin: .25rem 0 .5rem 0;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: .375rem;
+}
+
+.modal-level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: .25rem;
+}
+
+.level-up-badge {
+    background: linear-gradient(90deg, #ec4899, #8b5cf6);
+    color: #fff;
+    font-size: .7rem;
+    padding: .15rem .45rem;
+    border-radius: .25rem;
+    font-weight: 700;
+}
+
+.modal-xp-track {
+    height: .4rem;
+    margin: .25rem 0;
+}
+
+.modal-xp-sub {
+    font-size: .7rem;
+    color: #94a3b8;
+    text-align: right;
 }
 
 .final-stats {

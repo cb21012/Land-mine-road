@@ -56,18 +56,28 @@
                 <span id="mine-rate" class="stat-value mine-rate-value">5.00%</span>
             </div>
         </div>
-        <div id="hp-gauge" class="hp-gauge" role="progressbar" aria-label="HP" aria-valuemin="0" aria-valuemax="90" aria-valuenow="90">
-            <div class="hp-gauge-label">
-                <span>HP</span>
-                <span id="hp-value">90.00 / 90</span>
+        <div class="player-status-container">
+            <div id="xp-gauge" class="xp-gauge" role="progressbar" aria-label="XP">
+                <div class="xp-gauge-label">
+                    <span class="level-badge"><span id="level-label">LV</span>.<span id="level-value">0</span></span>
+                    <span id="xp-value">0 / 48 XP</span>
+                </div>
+                <div class="xp-bar-track"><div id="xp-bar" class="xp-bar"></div></div>
             </div>
-            <div class="hp-bar-track"><div id="hp-bar" class="hp-bar"></div></div>
+            <div id="hp-gauge" class="hp-gauge" role="progressbar" aria-label="HP" aria-valuemin="0" aria-valuemax="90" aria-valuenow="90">
+                <div class="hp-gauge-label">
+                    <span>HP <span id="regen-value" class="regen-sub">(+1.00/m)</span></span>
+                    <span id="hp-value">90.00 / 90</span>
+                </div>
+                <div class="hp-bar-track"><div id="hp-bar" class="hp-bar"></div></div>
+            </div>
         </div>
 
     <!-- Game -->
     <main class="main-content"><div class="board-container"><div id="board" class="grid gap-1"></div></div></main>
 
     <div id="bgm-notification" class="bgm-notification" aria-live="polite"></div>
+    <div id="levelup-notification" class="levelup-notification" aria-live="polite"></div>
 
     <!-- Footer Info -->
     <footer class="footer-info" id="footer-text">
@@ -82,12 +92,21 @@
 
             <!-- Final Stats Summary -->
             <div class="final-score-bg font-digital">
-                <span class="final-label font-sans">SCORE</span>
+                <span id="final-score-label" class="final-label font-sans">SCORE</span>
                 <span id="final-score" class="final-score">0</span>
+                <div id="modal-xp-gain" class="modal-xp-gain font-sans">+0 XP</div>
+            </div>
+            <div class="modal-level-panel font-digital">
+                <div class="modal-level-header font-sans">
+                    <span id="modal-level-label">LEVEL <span id="modal-level-val">0</span></span>
+                    <span id="modal-level-up-badge" class="level-up-badge" style="display: none;">LEVEL UP!</span>
+                </div>
+                <div class="xp-bar-track modal-xp-track"><div id="modal-xp-bar" class="xp-bar"></div></div>
+                <div class="modal-xp-sub font-sans"><span id="modal-xp-sub-text">0 / 48 XP</span></div>
             </div>
             <div class="final-stats font-digital">
                 <div class="final-stat">
-                    <span class="final-label font-sans">DISTANCE</span>
+                    <span id="final-distance-label" class="final-label font-sans">DISTANCE</span>
                     <span id="final-distance" class="final-time">0m</span>
                 </div>
                 <div class="final-stat">
