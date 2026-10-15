@@ -1,29 +1,28 @@
 //Const
-const ROWS = 13, VIEW_COLS = 33;
-const INIT_MINE_RATIO = 0.05;
+const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA_LENGTH = 1600, CHECKPOINT_FREQ = 200;
+const DZ_START_POS = 1500, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.3;
+
+MINE_RATIO_MAX = 0.24;
 const DISTRICT_MINE_RATIO = [.05, .07, .085, .1, .113, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
-const MINE_RATIO_MAX = 0.24;
-const INITIAL_GEN_LEN = 150;
-const CHUNK_GEN_LEN = 50;
-const progressSpeed = 30;
-const AREA_LENGTH = 1600;
-const CHECKPOINT_FREQ = 100;
-const DZ_START_POS = 1500;
-const DZ_END_POS = 1599;
-const DZ_MINE_RATIO_MULT = 1.5;
+const DISTRICT_MINE_DMG   = [64, 72, 80, 88, 96, 104, 112, 120, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 640, 768, 896, 1024];
 
 //Map
 let maxGeneratedCol = 0;
 let boardMap = new Map(); // Key: `${r},${c}` -> cell object
+const progressSpeed = 30;
 
 //Bools
 let isFirstClick = true, isGameOver = false, isSliding = false, isFlagModeMobile = false;
 
 //Game
-let distance = 0, district = 1, mineRate = INIT_MINE_RATIO, clicksCount = 0, timerSeconds = 0;
+let distance = 0, district = 1, mineRate = DISTRICT_MINE_RATIO[0], lmDmg = DISTRICT_MINE_DMG[0], clicksCount = 0, timerSeconds = 0;
 let moveSpeed = 0, score = 0, timerInterval = null, lastUpdTime = 0;
 let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistrict = 1;
 let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
+
+//player
+let level = (localStorage.getItem('Lmr_level') ?? 0), xp = (localStorage.getItem('Lmr_xp') ?? 0);
+let nextXp = 0, mhp = Math.floor(0.01*level**2 + level + 90), hp = mhp, regen = Number((level*0.02 + 1).toFixed(2));
 
 //Config
 let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 0);
@@ -32,6 +31,18 @@ let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 
 let currentBgmAudio = null;
 let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
 let bgmFadeInterval = null;
+
+function notatVal(val) {
+    if (val<1e7) return val;
+    const len = Math.floor(Math.log10(val) / 3);
+    const sufi = ["", "", "M", "B", "T", "Qa", "Qi", "Sx", "Sp"][len];
+    if (sufi == undefined) return (val / (1e3 ** len)).toFixed(2) + "e" + (len * 3);
+    return (val / (1e3 ** len)).toFixed(2) + sufi;
+}
+
+function getPlayerNextXp() {
+    nextXp = Math.ceil(1e-4*level**3 + 0.25*level**2 + level*16 + 48);
+}
 
 function getBgmTargetVolume(trackName) {
     // bgmInfosからトラックのvolumeを取得して設定値と掛け合わせる
@@ -71,17 +82,22 @@ function isDzPos(pos) {
     return mod >= DZ_START_POS && mod <= DZ_END_POS;
 }
 
-function getMineRateAtDistance(pos) {
+function getDistrictValueAtDistance(values, pos) {
     const districtIndex = Math.floor(pos / AREA_LENGTH);
-    const lastDistrictIndex = DISTRICT_MINE_RATIO.length - 1;
-    const startRate = DISTRICT_MINE_RATIO[districtIndex] ?? DISTRICT_MINE_RATIO[lastDistrictIndex];
-    const endRate = DISTRICT_MINE_RATIO[districtIndex + 1] ?? startRate;
+    const lastDistrictIndex = values.length - 1;
+    const startValue = values[districtIndex] ?? values[lastDistrictIndex];
+    const endValue = values[districtIndex + 1] ?? startValue;
     const distanceInDistrict = Math.floor((pos - districtIndex * AREA_LENGTH) / CHECKPOINT_FREQ) * CHECKPOINT_FREQ;
-    return startRate + (endRate - startRate) * (distanceInDistrict / AREA_LENGTH);
+    return startValue + (endValue - startValue) * (distanceInDistrict / AREA_LENGTH);
+}
+
+function getMineRateAtDistance(pos) {
+    return getDistrictValueAtDistance(DISTRICT_MINE_RATIO, pos);
 }
 
 function updateMineRate() {
     mineRate = getMineRateAtDistance(distance);
+    lmDmg = getDistrictValueAtDistance(DISTRICT_MINE_DMG, distance);
 }
 
 function startOrUpdateBgm() {
@@ -281,6 +297,8 @@ function resetGame() {
     timerInterval = null;
     timerSeconds = 0;
     clicksCount = 0;
+    score = 0;
+    hp = mhp;
     const savedCheckpointCount = Number.parseInt(localStorage.getItem('Lmr_passedCP') ?? '0', 10);
     passedCheckpointCount = Number.isInteger(savedCheckpointCount) && savedCheckpointCount >= 0
         ? savedCheckpointCount
@@ -606,8 +624,14 @@ async function handleCellClick(r, c) {
         return;
     }
 
+    if (cell.isOpen) {
+        if (!cell.isMine) await handleChordAction(r, c);
+        return;
+    }
+
     if (cell.isMine) {
-        triggerGameOver(cell);
+        damageMine(cell);
+        if (!isGameOver) renderBoard();
         return;
     }
 
@@ -637,6 +661,8 @@ function openCell(r, c) {
 
     cell.isOpen = true;
     cell.justOpened = true;
+    const cellDistrict = Math.floor(cell.c / AREA_LENGTH) + 1;
+    score += (cellDistrict + 2) / 3;
 
     // Recursive flood fill if 0 neighbor mines
     if (cell.neighborMines === 0 && !cell.isMine) {
@@ -663,16 +689,13 @@ async function handleChordAction(r, c) {
     }
 
     if (flagCount === cell.neighborMines) {
-        let hitMine = false;
-        let explodedCell = null;
-
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
                 const neighbor = getCell(r + dr, c + dc);
                 if (neighbor && !neighbor.isOpen && !neighbor.isFlagged) {
                     if (neighbor.isMine) {
-                        hitMine = true;
-                        explodedCell = neighbor;
+                        damageMine(neighbor);
+                        if (isGameOver) return;
                     } else {
                         openCell(r + dr, c + dc);
                     }
@@ -681,12 +704,6 @@ async function handleChordAction(r, c) {
         }
 
         renderBoard();
-
-        if (hitMine) {
-            triggerGameOver(explodedCell);
-            return;
-        }
-
         await checkAdvanceAnimated();
     }
 }
@@ -726,6 +743,7 @@ async function checkAdvanceAnimated() {
         await animateSlideStep();
 
         distance++;
+        hp = Math.min(mhp, hp + regen);
         if (distance % CHECKPOINT_FREQ === 0) updateMineRate();
         if (distance % CHECKPOINT_FREQ === 0 && distance / CHECKPOINT_FREQ > passedCheckpointCount) {
             passedCheckpointCount = distance / CHECKPOINT_FREQ;
@@ -805,6 +823,16 @@ function updateStatsDisplay() {
     document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i> ${formatMoveSpeed()}`;
     document.getElementById('district-count').textContent = String(district);
     document.getElementById('mine-rate').textContent = `${(mineRate * 100 * (isDzPos(distance) ? DZ_MINE_RATIO_MULT : 1)).toFixed(2)}%`;
+    const displayedHp = document.getElementById('hp-value');
+    const hpBar = document.getElementById('hp-bar');
+    const hpGauge = document.getElementById('hp-gauge');
+    if (displayedHp) displayedHp.textContent = `${hp.toFixed(2)} / ${mhp}`;
+    if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, hp / mhp * 100))}%`;
+    if (hpGauge) {
+        hpGauge.setAttribute('aria-valuemax', String(mhp));
+        hpGauge.setAttribute('aria-valuenow', String(Math.max(0, Math.min(mhp, hp))));
+        hpGauge.setAttribute('aria-valuetext', `${hp.toFixed(2)} / ${mhp}`);
+    }
 }
 
 function formatMoveSpeed() {
@@ -845,13 +873,21 @@ function toggleFlagMode() {
     document.getElementById("flag-mode-text").textContent = clang===1 ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
 }
 
-function triggerGameOver(explodedCell) {
+function damageMine(cell) {
+    hp -= lmDmg;
+    cell.isOpen = true;
+    cell.justExploded = true;
     playMineSe();
+    updateStatsDisplay();
+    if (hp < 0) triggerGameOver(cell);
+}
+
+function triggerGameOver(explodedCell) {
     stopBgmGameOver();
     isGameOver = true;
     clearInterval(timerInterval);
     updateStatsDisplay();
-    score = Math.round(moveSpeed*distance);
+    score = Math.round(score);
 
     if (explodedCell) {
         explodedCell.justExploded = true;
