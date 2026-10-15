@@ -3,8 +3,8 @@ const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA
 const DZ_START_POS = 1500, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.3;
 
 MINE_RATIO_MAX = 0.24;
-const DISTRICT_MINE_RATIO = [.05, .07, .085, .1, .113, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
-const DISTRICT_MINE_DMG   = [64, 72, 80, 88, 96, 104, 112, 120, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 640, 768, 896, 1024];
+const DISTRICT_MINE_RATIO = [.07, .08, .09, .1, .109, .117, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
+const DISTRICT_MINE_DMG   = [128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 706, 768, 834, 896, 960, 1024, 1280, 1536, 1792, 2048];
 
 //Map
 let maxGeneratedCol = 0;
@@ -29,11 +29,11 @@ let lastLevelUpCount = 0;
 
 function updatePlayerStats() {
     getPlayerNextXp();
-    mhp = Math.floor(0.01*level**2 + level + 90);
-    regen = Number((level*0.02 + 1).toFixed(2));
+    mhp = Math.floor(0.015*level**2 + level + 160);
+    regen = level*.0167 + 1;
 }
 
-let mhp = 90, hp = 90, regen = 1.00;
+let mhp = 160, hp = 160, regen = 1.00;
 updatePlayerStats();
 hp = mhp;
 
@@ -755,7 +755,7 @@ function openCell(r, c) {
     cell.isOpen = true;
     cell.justOpened = true;
     const cellDistrict = Math.floor(cell.c / AREA_LENGTH) + 1;
-    score += (cellDistrict + 2) / 3;
+    score += (cellDistrict)**2 / 10;
 
     // Recursive flood fill if 0 neighbor mines
     if (cell.neighborMines === 0 && !cell.isMine) {
