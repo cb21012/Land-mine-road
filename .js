@@ -4,7 +4,7 @@ const DZ_START_POS = 1500, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.3;
 
 MINE_RATIO_MAX = 0.24;
 const DISTRICT_MINE_RATIO = [.07, .08, .09, .1, .109, .117, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
-const DISTRICT_MINE_DMG   = [128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 706, 768, 834, 896, 960, 1024, 1280, 1536, 1792, 2048];
+const DISTRICT_MINE_DMG   = [128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256];
 
 //Map
 let maxGeneratedCol = 0;
@@ -33,6 +33,12 @@ function updatePlayerStats() {
     regen = level*.0167 + 1;
 }
 
+function calcLmDmgAfter16(d) {
+    let A = 64, add = 8;
+    for (let i = 0; i < d; i++) {A += add;if ((A & (A - 1)) === 0) {add = A / 8;}}
+    return A;
+}
+
 let mhp = 160, hp = 160, regen = 1.00;
 updatePlayerStats();
 hp = mhp;
@@ -54,7 +60,7 @@ function notatVal(val) {
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.ceil(1e-4*level**3 + 0.25*level**2 + level*16 + 48);
+    nextXp = Math.ceil(1e-5*level**3 + level**2 + level*80 + 480);
 }
 
 function commitScoreAsXp() {
@@ -95,7 +101,7 @@ function showLevelUpNotification(newLevel) {
     const notification = document.getElementById('levelup-notification');
     if (!notification) return;
     const ja = clang === 1;
-    notification.textContent = ja ? `★ レベルアップ！ Lv.${newLevel}` : `★ LEVEL UP! Lv.${newLevel}`;
+    notification.textContent = ja ? `レベルアップ！ Lv.${newLevel}` : `LEVEL UP! Lv.${newLevel}`;
     notification.classList.remove('is-showing');
     void notification.offsetWidth;
     notification.classList.add('is-showing');
@@ -141,8 +147,17 @@ function showBgmNotification(trackName) {
 
 function getExpectedBgmTrack(dist) {
     if (isDzPos(dist)) return 'bgm_dz';
-    // district番号のbgmが存在するか確認 (bgm{d})
-    const trackName = `bgm${district}`;
+    const currentDistrict = Math.floor(dist / AREA_LENGTH) + 1;
+    const bgmIds = window.bgmInfos
+        ? Object.keys(window.bgmInfos)
+            .map(Number)
+            .filter(id => Number.isInteger(id) && id > 0)
+        : [];
+    const maxBgmId = Math.max(0, ...bgmIds);
+    const bgmId = maxBgmId > 0
+        ? ((currentDistrict - 1) % maxBgmId) + 1
+        : currentDistrict;
+    const trackName = `bgm${bgmId}`;
     if (window.bgmInfos && getBgmInfoByName(trackName)) {
         return trackName;
     }
@@ -169,7 +184,10 @@ function getMineRateAtDistance(pos) {
 
 function updateMineRate() {
     mineRate = getMineRateAtDistance(distance);
-    lmDmg = getDistrictValueAtDistance(DISTRICT_MINE_DMG, distance);
+    const currentDistrict = Math.floor(distance / AREA_LENGTH) + 1;
+    lmDmg = currentDistrict >= 16
+        ? calcLmDmgAfter16(currentDistrict)
+        : getDistrictValueAtDistance(DISTRICT_MINE_DMG, distance);
 }
 
 function startOrUpdateBgm() {
@@ -503,7 +521,8 @@ function generateColumns(startC, count) {
                 isFlagged: false,
                 neighborMines: 0,
                 justOpened: false,
-                justExploded: false
+                justExploded: false,
+                isExploded: false
             });
         }
     }
@@ -675,13 +694,20 @@ function updateCellUIElement(cellBtn, cell) {
             cellBtn.classList.add('cell-just-exploded');
             cell.justExploded = false;
         }
+        if (cell.isExploded) {
+            cellBtn.classList.add('cell-exploded');
+        }
         if (cell.isMine) {
             cellBtn.innerHTML += '<i class="fa-solid fa-bomb bomb-icon"></i>';
         } else if (cell.neighborMines > 0) {
             cellBtn.innerHTML += `<span class="num-${cell.neighborMines}">${cell.neighborMines}</span>`;
         }
     } else if (cell.isFlagged) {
-        cellBtn.innerHTML += '<i class="fa-solid fa-flag flag-icon"></i>';
+        if (isGameOver && !cell.isMine) {
+            cellBtn.innerHTML += '<i class="fa-solid fa-xmark wrong-flag-icon"></i>';
+        } else {
+            cellBtn.innerHTML += '<i class="fa-solid fa-flag flag-icon"></i>';
+        }
     }
 }
 
@@ -909,6 +935,11 @@ function incrementClick() {
 
 function updateStatsDisplay() {
     district = Math.floor(distance / AREA_LENGTH) + 1;
+    const background = document.getElementById('district-background');
+    if (background && background.dataset.district !== String(district)) {
+        background.dataset.district = String(district);
+        background.style.backgroundImage = `url("bg/${district}.png")`;
+    }
     const traveledDistance = distance - startDistance;
     document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${traveledDistance}m`;
     document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
@@ -919,7 +950,7 @@ function updateStatsDisplay() {
     const displayedHp = document.getElementById('hp-value');
     const hpBar = document.getElementById('hp-bar');
     const hpGauge = document.getElementById('hp-gauge');
-    if (displayedHp) displayedHp.textContent = `${hp.toFixed(2)} / ${mhp}`;
+    if (displayedHp) displayedHp.textContent = `${Math.ceil(hp)} / ${mhp}`;
     if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, hp / mhp * 100))}%`;
     if (hpGauge) {
         hpGauge.setAttribute('aria-valuemax', String(mhp));
@@ -985,6 +1016,7 @@ function triggerGameOver(explodedCell) {
 
     if (explodedCell) {
         explodedCell.justExploded = true;
+        explodedCell.isExploded = true;
     }
 
     // Reveal visible mines & wrong flags
@@ -994,19 +1026,33 @@ function triggerGameOver(explodedCell) {
     for (let r = 0; r < ROWS; r++) {
         for (let c = startCol; c < endCol; c++) {
             const cell = getCell(r, c);
-            const cellBtn = document.getElementById(`cell-${r}-${c}`);
-            if (!cell || !cellBtn) continue;
+            if (!cell) continue;
             if (cell.isMine) {
                 cell.isOpen = true;
-                if (cell === explodedCell) {
-                    cellBtn.classList.add('cell-exploded');
-                }
-            } else if (cell.isFlagged && !cell.isMine) {
-                cellBtn.innerHTML = '<i class="fa-solid fa-xmark wrong-flag-icon"></i>';
             }
         }
     }
     renderBoard();
+
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = startCol; c < endCol; c++) {
+            const cell = getCell(r, c);
+            const cellBtn = document.getElementById(`cell-${r}-${c}`);
+            if (!cell || !cellBtn) continue;
+            if (cell.isMine) {
+                if (cell === explodedCell) {
+                    cellBtn.classList.add('cell-exploded');
+                }
+            } else if (cell.isFlagged && !cell.isMine) {
+                const flagIcon = cellBtn.querySelector('.flag-icon');
+                if (flagIcon) {
+                    flagIcon.className = 'fa-solid fa-xmark wrong-flag-icon';
+                } else if (!cellBtn.querySelector('.wrong-flag-icon')) {
+                    cellBtn.innerHTML += '<i class="fa-solid fa-xmark wrong-flag-icon"></i>';
+                }
+            }
+        }
+    }
     setTimeout(()=>{showModal();}, 300);
 }
 
@@ -1017,35 +1063,6 @@ function showModal() {
     document.getElementById('final-distance').innerText = `${distance}m`;
     document.getElementById('final-speed').innerText = String(formatMoveSpeed());
     document.getElementById('final-score').innerText = String(score);
-
-    const modalXpGain = document.getElementById('modal-xp-gain');
-    if (modalXpGain) {
-        modalXpGain.innerText = `+${lastGainedXp} XP`;
-    }
-    const modalLevelVal = document.getElementById('modal-level-val');
-    if (modalLevelVal) {
-        modalLevelVal.innerText = String(level);
-    }
-    const modalXpBar = document.getElementById('modal-xp-bar');
-    if (modalXpBar) {
-        const pct = nextXp > 0 ? Math.min(100, Math.max(0, (xp / nextXp) * 100)) : 0;
-        modalXpBar.style.width = `${pct}%`;
-    }
-    const modalXpSubText = document.getElementById('modal-xp-sub-text');
-    if (modalXpSubText) {
-        modalXpSubText.innerText = `${notatVal(Math.floor(xp))} / ${notatVal(nextXp)} XP`;
-    }
-    const levelUpBadge = document.getElementById('modal-level-up-badge');
-    if (levelUpBadge) {
-        if (lastLevelUpCount > 0) {
-            levelUpBadge.style.display = 'inline-block';
-            levelUpBadge.innerText = clang === 1 
-                ? (lastLevelUpCount > 1 ? `レベル+${lastLevelUpCount} UP!` : 'レベルアップ！') 
-                : (lastLevelUpCount > 1 ? `LEVEL +${lastLevelUpCount} UP!` : 'LEVEL UP!');
-        } else {
-            levelUpBadge.style.display = 'none';
-        }
-    }
 
     modal.classList.add('visible');
     setTimeout(() => {

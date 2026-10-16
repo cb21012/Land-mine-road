@@ -18,6 +18,7 @@ window.bgmInfos = {
     16: {name: "bgm16", title: "The Field Of Dreams", author: "pauliuw", license: "CC0", volume: 1.8},
     17: {name: "bgm17", title: "World Map", author: "Scott Elliott", license: "CC by 3.0", volume: 1.3},
     18: {name: "bgm18", title: "Water Wells in Your Head", author: "DONG", license: "CC BY 4.0", volume: 0.9},
+    19: {name: "bgm19", title: "Frosylva", author: "Peritune", license: "CC BY 4.0", volume: 0.65},
 }
 
 window.authorUrls = {
