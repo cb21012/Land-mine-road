@@ -11,20 +11,10 @@
 <body class="no-select">
     <div id="district-background" aria-hidden="true"></div>
 
-    <!-- RT Controls -->
-    <div class="volume-control-panel">
-        <div class="volume-control bgm-control">
-            <span class="vol-label">BGM</span>
-            <input type="range" id="bgm-volume" min="0" max="100" step="5" value="60" oninput="updateBgmVolume(this.value)">
-            <span id="bgm-volume-text" class="volume-text font-digital">60%</span>
-        </div>
-        <div class="volume-control se-control">
-            <span class="vol-label">SE</span>
-            <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)">
-            <span id="volume-text" class="volume-text font-digital">60%</span>
-        </div>
-    </div>
-    <button onclick="toggleLang()" class="lang-btn"> <span id="lang-btn">En</span></button>
+    <button id="settings-open-btn" class="settings-open-btn" onclick="openSettingsModal()" aria-label="Settings">
+        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        <span id="settings-button-label">Settings</span>
+    </button>
     <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span></button>
     <div class="start-checkpoint-control" id="start-checkpoint-control" hidden>
         <label for="start-district" id="start-district-label">District</label>
@@ -58,13 +48,6 @@
             </div>
         </div>
         <div class="player-status-container">
-            <div id="xp-gauge" class="xp-gauge" role="progressbar" aria-label="XP">
-                <div class="xp-gauge-label">
-                    <span class="level-badge"><span id="level-label">LV</span>.<span id="level-value">0</span></span>
-                    <span id="xp-value">0 / 48 XP</span>
-                </div>
-                <div class="xp-bar-track"><div id="xp-bar" class="xp-bar"></div></div>
-            </div>
             <div id="hp-gauge" class="hp-gauge" role="progressbar" aria-label="HP" aria-valuemin="0" aria-valuemax="90" aria-valuenow="90">
                 <div class="hp-gauge-label">
                     <span>HP <span id="regen-value" class="regen-sub">(+1.00/m)</span></span>
@@ -85,6 +68,13 @@
         Left-click / Tap to dig &bull; Right-click / Toggle mode to flag &bull; Click opened numbers to Chord &bull; Clear 45/65 cells in front 5m to advance!<br>
         Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)
     </footer>
+    <div id="xp-gauge" class="xp-gauge" role="progressbar" aria-label="XP">
+                <div class="xp-gauge-label">
+                    <span class="level-badge"><span id="level-label">LV</span>.<span id="level-value">0</span></span>
+                    <span id="xp-value">0 / 48 XP</span>
+                </div>
+                <div class="xp-bar-track"><div id="xp-bar" class="xp-bar"></div></div>
+    </div>
 
     <div id="modal" class="modal">
         <div class="modal-card" id="modal-card">
@@ -113,6 +103,49 @@
         </div>
     </div>
 
+    <div id="settings-modal" class="settings-modal" onclick="if (event.target === this) closeSettingsModal()">
+        <section class="settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="settings-header">
+                <h2 id="settings-title">Settings</h2>
+                <button class="settings-close-btn" onclick="closeSettingsModal()" aria-label="Close settings">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="settings-controls">
+                <div class="settings-row">
+                    <span class="settings-label" id="bgm-volume-label">BGM volume</span>
+                    <div class="volume-control">
+                        <input type="range" id="bgm-volume" min="0" max="100" step="5" value="60" oninput="updateBgmVolume(this.value)" aria-labelledby="bgm-volume-label">
+                        <span id="bgm-volume-text" class="volume-text font-digital">60%</span>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label" id="se-volume-label">SE volume</span>
+                    <div class="volume-control">
+                        <input type="range" id="se-volume" min="0" max="100" step="5" value="60" oninput="updateVolume(this.value)" aria-labelledby="se-volume-label">
+                        <span id="volume-text" class="volume-text font-digital">60%</span>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label" id="language-label">Language</span>
+                    <button onclick="toggleLang()" class="lang-btn"><span id="lang-btn">En</span></button>
+                </div>
+                <label class="settings-row settings-toggle-row" for="background-toggle">
+                    <span class="settings-label" id="background-label">Show background</span>
+                    <input type="checkbox" id="background-toggle" onchange="toggleBackground(this.checked)" checked>
+                </label>
+            </div>
+            <section id="now-playing" class="now-playing" aria-live="polite" hidden>
+                <h3 id="now-playing-title">Now playing</h3>
+                <div id="now-playing-track" class="now-playing-line"></div>
+                <div id="now-playing-credits" class="now-playing-line"></div>
+                <div class="now-playing-playback">
+                    <div id="now-playing-time" class="now-playing-line font-digital"></div>
+                    <progress id="now-playing-progress" class="now-playing-progress" value="0" max="100" aria-label="BGM playback progress"></progress>
+                </div>
+            </section>
+        </section>
+    </div>
 
     <script src="bgmInfo.js"></script>
     <script src=".js"></script>

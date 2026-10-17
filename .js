@@ -1,9 +1,15 @@
 //Const
 const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA_LENGTH = 1600, CHECKPOINT_FREQ = 200;
-const DZ_START_POS = 1500, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.3;
+const DZ_START_POS = 1550, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.5;
 
 MINE_RATIO_MAX = 0.24;
-const DISTRICT_MINE_RATIO = [.07, .08, .09, .1, .109, .117, .125, .132, .138, .144, .15, .156, .162, .167, .172, .176, .18, .184, .188, .191, .194, .197, .2];
+const DISTRICT_MINE_RATIO = [
+    1/15, 1/12.5, 1/11, 1/10, 1/9, 1/8.5, 1/8, 1/7.75, 1/7.5, 1/7.25, 
+    1/7, 1/6.8, 1/6.6, 1/6.4, 1/6.25, 1/6.1, 1/6, 1/5.9, 1/5.8, 1/5.7, 
+    1/5.6, 1/5.5, 1/5.45, 1/5.4, 1/5.35, 1/5.3, 1/5.25, 1/5.2, 1/5.15, 1/5.12, 
+    1/5.09, 1/5.06, 1/5.03, 1/5, 1/4.97, 1/4.94, 1/4.91, 1/4.88, 1/4.85, 1/4.82,
+    1/4.79, 1/4.76, 1/4.73, 1/4.7, 1/4.67, 1/4.64, 1/4.61, 1/4.58, 1/4.55, 1/4.52, 1/4.5
+];
 const DISTRICT_MINE_DMG   = [128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256];
 
 //Map
@@ -44,12 +50,15 @@ updatePlayerStats();
 hp = mhp;
 
 //Config
-let seVolume = 60, bgmVolume = 60, clang = (localStorage.getItem('Lmr_lang') ?? 0);
+let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
+let showDistrictBackground = localStorage.getItem('Lmr_showBackground') !== 'false';
 
 // BGM Audio Controller
 let currentBgmAudio = null;
 let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
 let bgmFadeInterval = null;
+let nowPlayingUpdateInterval = null;
+let nowPlayingStateKey = null;
 
 function notatVal(val) {
     if (val<1e7) return val;
@@ -217,9 +226,13 @@ function switchBgm(newTrack) {
     newAudio.volume = 0;
     currentBgmAudio = newAudio;
 
+    updateNowPlayingBgm();
+    newAudio.addEventListener('playing', updateNowPlayingBgm);
     const playPromise = newAudio.play();
     if (playPromise !== undefined) {
-        playPromise.catch(() => {});
+        playPromise.catch(() => {
+            updateNowPlayingBgm();
+        });
     }
 
     const fadeOutDuration = 1000;
@@ -282,6 +295,7 @@ function stopBgmGameOver() {
             if (currentBgmAudio === audioToStop) {
                 currentBgmAudio = null;
                 currentBgmTrack = null;
+                updateNowPlayingBgm();
             }
         }
     }, stepInterval);
@@ -297,11 +311,152 @@ function stopBgmImmediately() {
         currentBgmAudio = null;
     }
     currentBgmTrack = null;
+    updateNowPlayingBgm();
     const notification = document.getElementById('bgm-notification');
     if (notification) notification.classList.remove('is-playing');
 }
 
 function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.setItem('Lmr_lang', clang)}
+
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    modal.classList.add('visible');
+    startNowPlayingUpdates();
+    const closeButton = modal.querySelector('.settings-close-btn');
+    if (closeButton) closeButton.focus();
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    if (nowPlayingUpdateInterval) {
+        clearInterval(nowPlayingUpdateInterval);
+        nowPlayingUpdateInterval = null;
+    }
+    const openButton = document.getElementById('settings-open-btn');
+    if (openButton) openButton.focus();
+}
+
+function updateNowPlayingBgm() {
+    const section = document.getElementById('now-playing');
+    const audio = currentBgmAudio;
+    if (!section) return;
+
+    const isPlaying = audio && !audio.paused && bgmVolume > 0;
+    const stateKey = `${isPlaying ? currentBgmTrack : 'None'}:${clang}`;
+    if (stateKey === nowPlayingStateKey) return;
+    nowPlayingStateKey = stateKey;
+
+    const track = document.getElementById('now-playing-track');
+    const credits = document.getElementById('now-playing-credits');
+    if (!isPlaying) {
+        track.textContent = 'None';
+        credits.textContent = '---';
+        document.getElementById('now-playing-time').textContent = '---';
+        document.getElementById('now-playing-progress').value = 0;
+        section.hidden = false;
+        return;
+    }
+
+    const entries = window.bgmInfos ? Object.entries(window.bgmInfos) : [];
+    const entry = entries.find(([, info]) => info.name === currentBgmTrack);
+    const info = entry && entry[1];
+    const ja = clang === 1;
+    document.getElementById('now-playing-title').textContent = ja ? '再生中のBGM' : 'Now playing';
+    credits.replaceChildren();
+    if (!info) {
+        track.textContent = 'None';
+        credits.textContent = '---';
+    } else {
+        track.textContent = `${entry[0]} - ${info.title}`;
+
+        const authorUrl = window.authorUrls && window.authorUrls[info.author];
+        if (authorUrl) {
+            const authorLink = document.createElement('a');
+            authorLink.href = authorUrl;
+            authorLink.target = '_blank';
+            authorLink.rel = 'noopener noreferrer';
+            authorLink.textContent = info.author;
+            credits.append(authorLink);
+        } else {
+            credits.append(document.createTextNode(info.author));
+        }
+        credits.append(document.createTextNode(' ('));
+
+        const licenseUrls = window.licenseUrls && window.licenseUrls[info.license];
+        const licenseUrl = licenseUrls && (licenseUrls[ja ? 'ja' : 'en'] || licenseUrls.en);
+        if (licenseUrl) {
+            const licenseLink = document.createElement('a');
+            licenseLink.href = licenseUrl;
+            licenseLink.target = '_blank';
+            licenseLink.rel = 'noopener noreferrer';
+            licenseLink.textContent = info.license;
+            credits.append(licenseLink);
+        } else {
+            credits.append(document.createTextNode(info.license));
+        }
+        credits.append(document.createTextNode(')'));
+    }
+
+    section.hidden = false;
+    updateNowPlayingTime();
+}
+
+function updateNowPlayingTime() {
+    const time = document.getElementById('now-playing-time');
+    const progress = document.getElementById('now-playing-progress');
+    if (!time) return;
+
+    const audio = currentBgmAudio;
+    const isPlaying = audio && !audio.paused && bgmVolume > 0;
+    const hasTrackInfo = window.bgmInfos &&
+        Object.values(window.bgmInfos).some(info => info.name === currentBgmTrack);
+    const hasValidDuration = isPlaying && hasTrackInfo &&
+        Number.isFinite(audio.currentTime) && Number.isFinite(audio.duration) && audio.duration > 0;
+    if (!hasValidDuration) {
+        time.textContent = '---';
+        if (progress) progress.value = 0;
+        return;
+    }
+
+    const currentTime = Math.min(audio.currentTime, audio.duration);
+    time.textContent = `${formatTime(currentTime)} / ${formatTime(audio.duration)}`;
+    if (progress) {
+        progress.max = audio.duration;
+        progress.value = currentTime;
+        progress.setAttribute('aria-valuetext', `${formatTime(currentTime)} / ${formatTime(audio.duration)}`);
+    }
+}
+
+function startNowPlayingUpdates() {
+    updateNowPlayingBgm();
+    updateNowPlayingTime();
+    if (!nowPlayingUpdateInterval) {
+        nowPlayingUpdateInterval = setInterval(updateNowPlayingTime, 16.67);
+    }
+}
+
+document.addEventListener('keydown', (event) => {
+    const modal = document.getElementById('settings-modal');
+    if (event.key === 'Escape' && modal && modal.classList.contains('visible')) {
+        closeSettingsModal();
+    }
+});
+
+function toggleBackground(isVisible) {
+    showDistrictBackground = isVisible;
+    applyBackgroundVisibility();
+    localStorage.setItem('Lmr_showBackground', String(showDistrictBackground));
+}
+
+function applyBackgroundVisibility() {
+    const background = document.getElementById('district-background');
+    const toggle = document.getElementById('background-toggle');
+    if (background) background.classList.toggle('background-hidden', !showDistrictBackground);
+    if (toggle) toggle.checked = showDistrictBackground;
+}
 
 function updateTexts() {
     const ja = clang===1;
@@ -327,6 +482,15 @@ function updateTexts() {
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
     document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
     document.getElementById("lang-btn").textContent = ja ? "Ja" : "En";
+    document.getElementById("settings-title").textContent = ja ? "設定" : "Settings";
+    document.getElementById("settings-button-label").textContent = ja ? "設定" : "Settings";
+    document.getElementById("settings-open-btn").setAttribute("aria-label", ja ? "設定" : "Settings");
+    document.getElementById("bgm-volume-label").textContent = ja ? "BGM音量" : "BGM volume";
+    document.getElementById("se-volume-label").textContent = ja ? "効果音音量" : "SE volume";
+    document.getElementById("language-label").textContent = ja ? "言語" : "Language";
+    document.getElementById("background-label").textContent = ja ? "背景を表示" : "Show background";
+    updateNowPlayingBgm();
+    document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
     document.getElementById("footer-text").innerHTML = ja ? 
         `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう<br>
         クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` : 
@@ -337,6 +501,7 @@ function updateTexts() {
 
 window.onload = () => {
     initVolume();
+    applyBackgroundVisibility();
     updateTexts();
     resetGame();
 };
