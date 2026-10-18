@@ -462,8 +462,11 @@ function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
     document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
-    document.getElementById("district-label").textContent = ja ? "地区" : "District";
-    document.getElementById("mine-rate-label").textContent = ja ? "地雷率" : "Mine rate";
+    const districtLabel = document.getElementById("district-label");
+    const districtCount = document.getElementById("district-count");
+    districtLabel.textContent = ja ? "区   " : "District ";
+    document.getElementById("mine-rate-label").textContent = ja ? "地雷率 " : "   Mine rate ";
+    districtLabel.parentElement.insertBefore(ja ? districtCount : districtLabel, ja ? districtLabel : districtCount);
     document.getElementById("start-district-label").textContent = ja ? "地区" : "District";
     document.getElementById("start-checkpoint-label").textContent = ja ? "距離" : "Distance";
     document.querySelectorAll("#start-district option").forEach((option) => {
@@ -492,10 +495,8 @@ function updateTexts() {
     updateNowPlayingBgm();
     document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
     document.getElementById("footer-text").innerHTML = ja ? 
-        `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう<br>
-        クレジット : 効果音 by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)` : 
-        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!<br>
-        Credits: Sound effects by 効果音ラボ (<a href="https://soundeffect-lab.info">https://soundeffect-lab.info</a>)`;
+        `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう` : 
+        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!`;
     updatePlayerDisplay();
 }
 
