@@ -17,11 +17,9 @@
     </button>
     <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span></button>
     <div class="start-checkpoint-control" id="start-checkpoint-control" hidden>
-        <label for="start-district" id="start-district-label">District</label>
         <select id="start-district" onchange="changeStartDistrict(this.value)" aria-label="Start district">
             <option value="1">District 1</option>
         </select>
-        <label for="start-checkpoint" id="start-checkpoint-label">Distance</label>
         <select id="start-checkpoint" onchange="changeStartCheckpoint(this.value)" aria-label="Start distance">
             <option value="0">0m</option>
         </select>
@@ -37,8 +35,9 @@
             <div class="stat"><span id="clicks-count" class="stat-value clicks-value"><i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i>000</span></div>
             <div class="stat"><span id="move-speed" class="stat-value speed-value"><i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i>0.0 km/h</span></div>
         </div>
-        <div class="district-stats-bar">
-            <span class="district-stats-text"><span id="district-label">District </span><b id="district-count" class="stat-value district-value">1</b><span id="mine-rate-label">  Mine rate :</span><b id="mine-rate" class="stat-value mine-rate-value">5.00%</b></span>
+        <div class="district-stats-bar" id="district-stats-bar">
+            <span id="district-label">District </span><b id="district-count" class="stat-value district-value">1</b>
+            <span id="mine-rate-label">  Mine rate :</span><b id="mine-rate" class="stat-value mine-rate-value">5.00%</b>
         </div>
         <div class="player-status-container">
             <div id="hp-gauge" class="hp-gauge" role="progressbar" aria-label="HP" aria-valuemin="0" aria-valuemax="90" aria-valuenow="90">
@@ -121,6 +120,13 @@
                 <div class="settings-row">
                     <span class="settings-label" id="language-label">Language</span>
                     <button onclick="toggleLang()" class="lang-btn"><span id="lang-btn">En</span></button>
+                </div>
+                <div class="settings-row">
+                    <label class="settings-label" id="difficulty-label" for="difficulty-select">Difficulty</label>
+                    <select id="difficulty-select" class="settings-select" onchange="setDifficulty(this.value)" aria-labelledby="difficulty-label">
+                        <option value="0">Normal</option>
+                        <option value="1">Hard</option>
+                    </select>
                 </div>
                 <label class="settings-row settings-toggle-row" for="background-toggle">
                     <span class="settings-label" id="background-label">Show background</span>
