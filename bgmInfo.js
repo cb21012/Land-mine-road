@@ -6,7 +6,7 @@ window.bgmInfos = {
     4: {name: "bgm4", title: "Rainwalk", author: "Peritune", license: "Peritune", volume: 0.7},
     5: {name: "bgm5", title: "Acoustic30", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.65},
     6: {name: "bgm6", title: "Snowy Day 3", author: "Peritune", license: "CC BY 4.0", volume: 0.6},
-    7: {name: "bgm7", title: "Piano31", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.65},
+    7: {name: "bgm7", title: "Snow sky (雪空)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     8: {name: "bgm8", title: "Healing3", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.6},
     9: {name: "bgm9", title: "Underwater", author: "CleytonKauffman", license: "CC0", volume: 1.2},
     10: {name: "bgm10", title: "Water Wells in Your Head", author: "DONG", license: "CC BY 4.0", volume: 0.9},
@@ -22,10 +22,12 @@ window.bgmInfos = {
     20: {name: "bgm20", title: "Acoustic50", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.6},
     21: {name: "bgm21", title: "Acoustic48", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.6},
     22: {name: "bgm22", title: "Acoustic31", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.6},
+    51: {name: "bgm-1", title: "Piano31", author: "Maou Damashii", license: "CC BY 4.0", volume: 0.65},
 }
 
 window.authorUrls = {
     "Peritune": "https://peritune.com/",
+    "Moppy sound (もっぴーさうんど)": "https://www.moppysound.com/",
     "Maou Damashii": "https://maoudamashii.jokersounds.com/",
     "Alexandr Zhelanov": "https://www.youtube.com/c/AlexandrZhelanovsMusic",
     "CleytonKauffman": "https://soundcloud.com/cleytonkauffman",
@@ -38,4 +40,5 @@ window.licenseUrls = {
     "CC BY 4.0": {"en": "https://creativecommons.org/licenses/by/4.0/deed.en", "ja": "https://creativecommons.org/licenses/by/4.0/deed.ja"},
     "CC BY 3.0": {"en": "https://creativecommons.org/licenses/by/3.0/deed.en", "ja": "https://creativecommons.org/licenses/by/3.0/deed.ja"},
     "Peritune" : {"en": "https://peritune.com/about/", "ja": "https://peritune.com/about/"},
+    "OpenTracks": {"en": "https://opentracks.com/en/help/articles/license/", "ja": "https://opentracks.com/help/articles/license/"}
 }
