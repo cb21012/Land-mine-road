@@ -2,13 +2,14 @@
 const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA_LENGTH = 1600, CHECKPOINT_FREQ = 200;
 const DZ_START_POS = 1550, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.5;
 
-MINE_RATIO_MAX = 0.24;
+MINE_RATIO_MAX = 0.24, HARD_LM_DMG = 1.79769e308;
 const DISTRICT_MINE_RATIO = [
-    1/15, 1/12.5, 1/11, 1/10, 1/9, 1/8.5, 1/8, 1/7.75, 1/7.5, 1/7.25, 
-    1/7, 1/6.8, 1/6.6, 1/6.4, 1/6.25, 1/6.1, 1/6, 1/5.9, 1/5.8, 1/5.7, 
-    1/5.6, 1/5.5, 1/5.45, 1/5.4, 1/5.35, 1/5.3, 1/5.25, 1/5.2, 1/5.15, 1/5.12, 
-    1/5.09, 1/5.06, 1/5.03, 1/5, 1/4.97, 1/4.94, 1/4.91, 1/4.88, 1/4.85, 1/4.82,
-    1/4.79, 1/4.76, 1/4.73, 1/4.7, 1/4.67, 1/4.64, 1/4.61, 1/4.58, 1/4.55, 1/4.52, 1/4.5
+    1/16, 1/12.5, 1/11.5, 1/11, 1/10, 1/9.5, 1/9, 1/8.5, 1/8, 1/7.75, 
+    1/7.5, 1/7.25, 1/7, 1/6.8, 1/6.6, 1/6.4, 1/6.25, 1/6.1, 1/6, 1/5.9, 
+    1/5.8, 1/5.7, 1/5.6, 1/5.5, 1/5.45, 1/5.4, 1/5.35, 1/5.3, 1/5.25, 1/5.2, 
+    1/5.15, 1/5.12, 1/5.09, 1/5.06, 1/5.03, 1/5, 1/4.97, 1/4.94, 1/4.91, 1/4.88, 
+    1/4.85, 1/4.82, 1/4.79, 1/4.76, 1/4.73, 1/4.7, 1/4.67, 1/4.64, 1/4.61, 1/4.58, 
+    1/4.55, 1/4.52, 1/4.5
 ];
 const DISTRICT_MINE_DMG   = [128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256];
 
@@ -36,7 +37,7 @@ let lastLevelUpCount = 0;
 function updatePlayerStats() {
     getPlayerNextXp();
     mhp = Math.floor(0.015*level**2 + level + 160);
-    regen = level*.0167 + 1;
+    regen = level*.0167 + 1 + mhp/2000;
 }
 
 function calcLmDmgAfter16(d) {
@@ -52,6 +53,7 @@ hp = mhp;
 //Config
 let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
 let showDistrictBackground = localStorage.getItem('Lmr_showBackground') !== 'false';
+let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
 
 // BGM Audio Controller
 let currentBgmAudio = null;
@@ -69,7 +71,7 @@ function notatVal(val) {
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.ceil(1e-5*level**3 + level**2 + level*80 + 480);
+    nextXp = Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.01**level);
 }
 
 function commitScoreAsXp() {
@@ -193,6 +195,10 @@ function getMineRateAtDistance(pos) {
 
 function updateMineRate() {
     mineRate = getMineRateAtDistance(distance);
+    if (difficulty === 1) {
+        lmDmg = HARD_LM_DMG;
+        return;
+    }
     const currentDistrict = Math.floor(distance / AREA_LENGTH) + 1;
     lmDmg = currentDistrict >= 16
         ? calcLmDmgAfter16(currentDistrict)
@@ -317,6 +323,12 @@ function stopBgmImmediately() {
 }
 
 function toggleLang() {clang = clang===0 ? 1 : 0; updateTexts(); localStorage.setItem('Lmr_lang', clang)}
+
+function setDifficulty(value) {
+    difficulty = Number(value) === 1 ? 1 : 0;
+    localStorage.setItem('Lmr_diff', String(difficulty));
+    updateMineRate();
+}
 
 function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
@@ -462,15 +474,12 @@ function updateTexts() {
     const ja = clang===1;
     document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
     document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
-    const districtLabel = document.getElementById("district-label");
-    const districtCount = document.getElementById("district-count");
-    districtLabel.textContent = ja ? "区   " : "District ";
-    document.getElementById("mine-rate-label").textContent = ja ? "地雷率 " : "   Mine rate ";
-    districtLabel.parentElement.insertBefore(ja ? districtCount : districtLabel, ja ? districtLabel : districtCount);
-    document.getElementById("start-district-label").textContent = ja ? "地区" : "District";
-    document.getElementById("start-checkpoint-label").textContent = ja ? "距離" : "Distance";
+    document.getElementById("district-stats-bar").innerHTML = 
+        ja ? `<b id="district-count" class="stat-value district-value">${district}</b> 区<br>地雷率 : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>` 
+        : `District  <b id="district-count" class="stat-value district-value">${district}</b><br>Mine rate : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>`;
+    
     document.querySelectorAll("#start-district option").forEach((option) => {
-        option.textContent = `${ja ? "地区" : "District"} ${option.value}`;
+        option.textContent = ja ? `${option.value}区` : `District ${option.value}`;
     });
     const finalScoreLabel = document.getElementById("final-score-label");
     if (finalScoreLabel) finalScoreLabel.textContent = ja ? "スコア" : "SCORE";
@@ -491,6 +500,8 @@ function updateTexts() {
     document.getElementById("bgm-volume-label").textContent = ja ? "BGM音量" : "BGM volume";
     document.getElementById("se-volume-label").textContent = ja ? "効果音音量" : "SE volume";
     document.getElementById("language-label").textContent = ja ? "言語" : "Language";
+    document.getElementById("difficulty-label").textContent = ja ? "難易度" : "Difficulty";
+    document.getElementById("difficulty-select").value = String(difficulty);
     document.getElementById("background-label").textContent = ja ? "背景を表示" : "Show background";
     updateNowPlayingBgm();
     document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
@@ -602,7 +613,7 @@ function resetGame() {
         for (let unlockedDistrict = 1; unlockedDistrict <= getMaxUnlockedDistrict(); unlockedDistrict++) {
             const option = document.createElement('option');
             option.value = String(unlockedDistrict);
-            option.textContent = `${clang === 1 ? '地区' : 'District'} ${unlockedDistrict}`;
+            option.textContent = clang===1 ? `${option.value}区` : `District ${option.value}`;;
             startDistrictSelect.appendChild(option);
         }
         startDistrictSelect.value = String(selectedStartDistrict);
@@ -947,7 +958,7 @@ function openCell(r, c) {
     cell.isOpen = true;
     cell.justOpened = true;
     const cellDistrict = Math.floor(cell.c / AREA_LENGTH) + 1;
-    score += (cellDistrict)**2 / 10;
+    score += ((cellDistrict+1)**2.4 * 0.1 * 1.05**cellDistrict);
 
     // Recursive flood fill if 0 neighbor mines
     if (cell.neighborMines === 0 && !cell.isMine) {
@@ -1228,7 +1239,7 @@ function showModal() {
 
     document.getElementById('final-distance').innerText = `${distance}m`;
     document.getElementById('final-speed').innerText = String(formatMoveSpeed());
-    document.getElementById('final-score').innerText = String(score);
+    document.getElementById('final-score').innerText = String(notatVal(score));
 
     modal.classList.add('visible');
     setTimeout(() => {

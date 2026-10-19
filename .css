@@ -331,8 +331,9 @@ body {
     padding: 6px 12px;
     background-color: rgba(15, 23, 42, .5);
     border: 1px solid #1e293b;
-    width: max-content;
+    width: 10rem;
     white-space: nowrap;
+    text-align: center;
 }
 
 .stat {
@@ -368,8 +369,9 @@ body {
 }
 
 .mine-rate-value {
-    color: #f87171;
-    font-size: 1.7rem;
+    color: #f88;
+    font-size: 1.1rem;
+    font-weight: 300;
 }
 
 .player-status-container {
@@ -782,6 +784,14 @@ body {
 
 .settings-row .volume-control {
     flex: 0 0 auto;
+}
+
+.settings-select {
+    padding: .375rem .5rem;
+    border: 1px solid #475569;
+    border-radius: .375rem;
+    background-color: #1e293b;
+    color: #f1f5f9;
 }
 
 .settings-row input[type="checkbox"] {
