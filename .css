@@ -396,29 +396,12 @@ body {
     font-family: 'Share Tech Mono', monospace;
 }
 
-.xp-gauge {
-    width: 100%;
-}
-
 .hp-gauge-label {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .25rem;
     font-size: .75rem;
-}
-
-.xp-gauge-label {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: .25rem;
-    font-size: .75rem;
-}
-
-.level-badge {
-    color: #a78bfa;
-    font-weight: 700;
 }
 
 .gauge-sub {
@@ -437,6 +420,30 @@ body {
     overflow: hidden;
     border-radius: 999px;
     background-color: #334155;
+}
+
+#xp-gauge {
+    position: fixed;
+    bottom: 0;
+}
+
+.xp-gauge {
+    width: 100%;
+}
+
+.xp-gauge-label {
+    display: flex;
+    width: max-content;
+    gap: 1rem;
+    align-items: center;
+    padding: .1rem 1rem;
+    background-color: rgba(0, 0, 0, .3);
+    font-size: .8rem;
+}
+
+.level-badge {
+    color: #a78bfa;
+    font-weight: 700;
 }
 
 .xp-bar-track {

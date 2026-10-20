@@ -485,10 +485,6 @@ function updateTexts() {
     if (finalScoreLabel) finalScoreLabel.textContent = ja ? "スコア" : "SCORE";
     const finalDistLabel = document.getElementById("final-distance-label");
     if (finalDistLabel) finalDistLabel.textContent = ja ? "距離" : "DISTANCE";
-    const modalLevelLabel = document.getElementById("modal-level-label");
-    if (modalLevelLabel) modalLevelLabel.innerHTML = `${ja ? "レベル" : "LEVEL"} <span id="modal-level-val">${level}</span>`;
-    const levelLabel = document.getElementById("level-label");
-    if (levelLabel) levelLabel.textContent = ja ? "Lv" : "LV";
     document.getElementById("final-speed-label").textContent = ja ? "速度" : "SPEED";
     document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
     document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
