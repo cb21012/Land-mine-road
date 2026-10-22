@@ -41,7 +41,9 @@ window.authorUrls = {
     "CleytonKauffman": "https://soundcloud.com/cleytonkauffman",
     "pauliuw": "https://opengameart.org/users/pauliuw",
     "DONG": "https://yh.16dimensional.com/",
-    "MAOU": "https://opengameart.org/users/maou"
+    "MAOU": "https://opengameart.org/users/maou",
+    "Scott Elliott": "https://opengameart.org/users/scrabbit",
+    "効果音ラボ": "https://soundeffect-lab.info/",
 }
 
 window.licenseUrls = {

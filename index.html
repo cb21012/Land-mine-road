@@ -55,10 +55,7 @@
     <div id="bgm-notification" class="bgm-notification" aria-live="polite"></div>
     <div id="levelup-notification" class="levelup-notification" aria-live="polite"></div>
 
-    <!-- Footer Info -->
-    <footer class="footer-info" id="footer-text">
-        Left-click / Tap to dig &bull; Right-click / Toggle mode to flag &bull; Click opened numbers to Chord &bull; Clear 45/65 cells in front 5m to advance!
-    </footer>
+    <div class="footer-info" id="footer-text"></div>
     <div id="xp-gauge" class="xp-gauge" role="progressbar" aria-label="XP">
                 <div class="xp-gauge-label">
                     <span class="level-badge"><span id="level-label">Lvl. </span><span id="level-value">0</span></span>
@@ -138,9 +135,14 @@
                 </label>
                 <div class="settings-row bgm-list-button-row">
                     <span class="settings-label"></span>
-                    <button id="bgm-list-open-btn" class="lang-btn bgm-list-open-btn" onclick="openBgmListModal()" hidden>
-                        <span id="bgm-list-open-label">BGM list</span>
-                    </button>
+                    <div class="bgm-list-button-group">
+                        <button id="bgm-list-open-btn" class="lang-btn bgm-list-open-btn" onclick="openBgmListModal()" hidden>
+                            <span id="bgm-list-open-label">BGM list</span>
+                        </button>
+                        <button id="credits-open-btn" class="lang-btn" onclick="openCreditsModal()">
+                            <span id="credits-open-label">Credits</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <section id="now-playing" class="now-playing" aria-live="polite" hidden>
@@ -176,6 +178,27 @@
                     <tbody id="bgm-list"></tbody>
                 </table>
             </div>
+        </section>
+    </div>
+
+    <div id="credits-modal" class="bgm-list-modal credits-modal" onclick="if (event.target === this) closeCreditsModal()">
+        <section class="bgm-list-card credits-card" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+            <div class="settings-header">
+                <h2 id="credits-title">Credits</h2>
+                <button class="settings-close-btn credits-close-btn" onclick="closeCreditsModal()" aria-label="Close credits">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <section class="credits">
+                <div class="credits-section">
+                    <h3>BGM</h3>
+                    <div id="bgm-credits-list" class="credits-list"></div>
+                </div>
+                <div class="credits-section">
+                    <h3>SE</h3>
+                    <div id="se-credits-list" class="credits-list"></div>
+                </div>
+            </section>
         </section>
     </div>
 

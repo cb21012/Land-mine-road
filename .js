@@ -68,13 +68,13 @@ let nowPlayingStateKey = null;
 function notatVal(val) {
     if (val<1e7) return val;
     const len = Math.floor(Math.log10(val) / 3);
-    const sufi = ["", "", "M", "B", "T", "Qa", "Qi", "Sx", "Sp"][len];
+    const sufi = ["", "", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"][len];
     if (sufi == undefined) return (val / (1e3 ** len)).toFixed(2) + "e" + (len * 3);
     return (val / (1e3 ** len)).toFixed(2) + sufi;
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.01**level);
+    nextXp = Math.min(1e60, Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.01**level));
 }
 
 function commitScoreAsXp() {
@@ -228,6 +228,22 @@ function closeBgmListModal() {
     if (!modal) return;
     modal.classList.remove('visible');
     const openButton = document.getElementById('bgm-list-open-btn');
+    if (openButton) openButton.focus();
+}
+
+function openCreditsModal() {
+    const modal = document.getElementById('credits-modal');
+    if (!modal) return;
+    modal.classList.add('visible');
+    const closeButton = modal.querySelector('.credits-close-btn');
+    if (closeButton) closeButton.focus();
+}
+
+function closeCreditsModal() {
+    const modal = document.getElementById('credits-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    const openButton = document.getElementById('credits-open-btn');
     if (openButton) openButton.focus();
 }
 
@@ -571,6 +587,28 @@ function updateNowPlayingTime() {
     }
 }
 
+function renderCredits() {
+    const bgmCredits = document.getElementById('bgm-credits-list');
+    const seCredits = document.getElementById('se-credits-list');
+    if (!bgmCredits || !seCredits) return;
+
+    bgmCredits.replaceChildren();
+    seCredits.replaceChildren();
+    Object.entries(window.authorUrls || {}).forEach(([author, url]) => {
+        const entry = document.createElement('div');
+        entry.className = 'credit-entry';
+        const name = document.createElement('div');
+        name.textContent = `${author}:`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = url;
+        entry.append(name, link);
+        (author === '効果音ラボ' ? seCredits : bgmCredits).append(entry);
+    });
+}
+
 function startNowPlayingUpdates() {
     updateNowPlayingBgm();
     updateNowPlayingTime();
@@ -581,9 +619,14 @@ function startNowPlayingUpdates() {
 
 document.addEventListener('keydown', (event) => {
     const bgmModal = document.getElementById('bgm-list-modal');
+    const creditsModal = document.getElementById('credits-modal');
     const modal = document.getElementById('settings-modal');
     if (event.key === 'Escape' && bgmModal && bgmModal.classList.contains('visible')) {
         closeBgmListModal();
+        return;
+    }
+    if (event.key === 'Escape' && creditsModal && creditsModal.classList.contains('visible')) {
+        closeCreditsModal();
         return;
     }
     if (event.key === 'Escape' && modal && modal.classList.contains('visible')) {
@@ -636,18 +679,25 @@ function updateTexts() {
     document.getElementById("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
     document.getElementById("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
     document.getElementById("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
+    document.getElementById("credits-title").textContent = ja ? "クレジット" : "Credits";
+    document.getElementById("credits-open-label").textContent = ja ? "クレジット" : "Credits";
     document.getElementById("bgm-list-radio-heading").textContent = ja ? "選択" : "Select";
     document.getElementById("bgm-list-id-heading").textContent = "ID";
     document.getElementById("bgm-list-track-heading").textContent = ja ? "BGM" : "BGM";
     document.getElementById("bgm-list-author-heading").textContent = ja ? "作者" : "Author";
     document.querySelector(".bgm-list-close-btn").setAttribute("aria-label", ja ? "BGM一覧を閉じる" : "Close BGM list");
+    document.querySelector(".credits-close-btn").setAttribute("aria-label", ja ? "クレジットを閉じる" : "Close credits");
     updateBgmFixedControls();
     if (document.getElementById('bgm-list-modal').classList.contains('visible')) renderBgmList();
     updateNowPlayingBgm();
     document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
     document.getElementById("footer-text").innerHTML = ja ? 
-        `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗 / 前方5メートルの45/65マスを掘削して前に進もう` : 
-        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag / Clear 45/65 cells in front 5m to advance!`;
+        `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗<br>
+        数字が周囲の旗の数と一致しているとき、その数字をクリックする : コーディング<br>
+        前方5メートルの45/65マスを掘削して前に進もう` : 
+        `Left-click, Dig-mode->Tap : dig / Right-click, Flag-mode->Tap : Flag<br>
+        Click on number if number equals to flags amount : Chord<br>
+        Clear 45/65 cells in front 5m to advance!`;
     updatePlayerDisplay();
 }
 
@@ -655,6 +705,7 @@ window.onload = () => {
     initVolume();
     applyBackgroundVisibility();
     updateBgmFixedControls();
+    renderCredits();
     updateTexts();
     resetGame();
 };
