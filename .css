@@ -738,6 +738,91 @@ body {
     display: flex;
 }
 
+.bgm-list-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgba(2, 6, 23, .8);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.bgm-list-modal.visible {
+    display: flex;
+}
+
+.bgm-list-card {
+    width: min(100%, 48rem);
+    max-height: min(85vh, 48rem);
+    padding: 1.25rem;
+    border: 1px solid #334155;
+    border-radius: 1rem;
+    background-color: #0f172a;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .6);
+    display: flex;
+    flex-direction: column;
+}
+
+.bgm-list-table-wrap {
+    overflow: auto;
+}
+
+.bgm-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #cbd5e1;
+    font-size: .75rem;
+    text-align: left;
+}
+
+.bgm-list-table th,
+.bgm-list-table td {
+    padding: .2rem .3rem;
+    border-bottom: 1px solid #334155;
+}
+
+.bgm-list-table th {
+    position: sticky;
+    top: 0;
+    background-color: #0f172a;
+    color: #22d3ee;
+}
+
+.bgm-list-table th:first-child,
+.bgm-list-table td:first-child {
+    width: 4rem;
+    text-align: center;
+}
+
+.bgm-list-table input[type="radio"] {
+    accent-color: #22d3ee;
+    cursor: pointer;
+}
+
+.bgm-list-table input[type="radio"]:disabled {
+    cursor: not-allowed;
+}
+
+.bgm-list-table .bgm-locked-row {
+    color: #64748b;
+}
+
+.bgm-list-table .bgm-selectable-row {
+    cursor: pointer;
+}
+
+.bgm-list-table .bgm-selectable-row:hover {
+    background-color: #1e293b;
+}
+
+.bgm-list-open-btn[hidden] {
+    display: none;
+}
+
 .settings-card {
     width: min(100%, 26rem);
     padding: 1.25rem;

@@ -132,6 +132,16 @@
                     <span class="settings-label" id="background-label">Show background</span>
                     <input type="checkbox" id="background-toggle" onchange="toggleBackground(this.checked)" checked>
                 </label>
+                <label class="settings-row settings-toggle-row" for="bgm-fixed-toggle">
+                    <span class="settings-label" id="bgm-fixed-label">Fix BGM</span>
+                    <input type="checkbox" id="bgm-fixed-toggle" onchange="toggleBgmFixed(this.checked)">
+                </label>
+                <div class="settings-row bgm-list-button-row">
+                    <span class="settings-label"></span>
+                    <button id="bgm-list-open-btn" class="lang-btn bgm-list-open-btn" onclick="openBgmListModal()" hidden>
+                        <span id="bgm-list-open-label">BGM list</span>
+                    </button>
+                </div>
             </div>
             <section id="now-playing" class="now-playing" aria-live="polite" hidden>
                 <h3 id="now-playing-title">Now playing</h3>
@@ -142,6 +152,30 @@
                     <progress id="now-playing-progress" class="now-playing-progress" value="0" max="100" aria-label="BGM playback progress"></progress>
                 </div>
             </section>
+        </section>
+    </div>
+
+    <div id="bgm-list-modal" class="bgm-list-modal" onclick="if (event.target === this) closeBgmListModal()">
+        <section class="bgm-list-card" role="dialog" aria-modal="true" aria-labelledby="bgm-list-title">
+            <div class="settings-header">
+                <h2 id="bgm-list-title">BGM list</h2>
+                <button class="settings-close-btn bgm-list-close-btn" onclick="closeBgmListModal()" aria-label="Close BGM list">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="bgm-list-table-wrap">
+                <table class="bgm-list-table">
+                    <thead>
+                        <tr>
+                            <th id="bgm-list-radio-heading">Select</th>
+                            <th id="bgm-list-id-heading">ID</th>
+                            <th id="bgm-list-track-heading">BGM</th>
+                            <th id="bgm-list-author-heading">Author</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bgm-list"></tbody>
+                </table>
+            </div>
         </section>
     </div>
 

@@ -54,11 +54,14 @@ hp = mhp;
 let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
 let showDistrictBackground = localStorage.getItem('Lmr_showBackground') !== 'false';
 let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
+let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
+let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
 
 // BGM Audio Controller
 let currentBgmAudio = null;
 let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
 let bgmFadeInterval = null;
+const activeBgmAudios = new Set();
 let nowPlayingUpdateInterval = null;
 let nowPlayingStateKey = null;
 
@@ -145,6 +148,10 @@ function getBgmInfoByName(name) {
     return Object.values(window.bgmInfos).find(b => b.name === name) || null;
 }
 
+function getBgmInfoById(id) {
+    return window.bgmInfos ? window.bgmInfos[id] || null : null;
+}
+
 function showBgmNotification(trackName) {
     const info = getBgmInfoByName(trackName);
     const notification = document.getElementById('bgm-notification');
@@ -157,12 +164,16 @@ function showBgmNotification(trackName) {
 }
 
 function getExpectedBgmTrack(dist) {
+    const fixedBgm = getBgmInfoById(fixedBgmId);
+    if (isBgmFixed && fixedBgm && isBgmIdSelectable(fixedBgmId)) {
+        return fixedBgm.name;
+    }
     if (isDzPos(dist)) return 'bgm_dz';
     const currentDistrict = Math.floor(dist / AREA_LENGTH) + 1;
     const bgmIds = window.bgmInfos
         ? Object.keys(window.bgmInfos)
             .map(Number)
-            .filter(id => Number.isInteger(id) && id > 0)
+            .filter(id => Number.isInteger(id) && id > 0 && id < 1000)
         : [];
     const maxBgmId = Math.max(0, ...bgmIds);
     const bgmId = maxBgmId > 0
@@ -173,6 +184,104 @@ function getExpectedBgmTrack(dist) {
         return trackName;
     }
     return 'bgm1'; // フォールバック
+}
+
+function isBgmIdSelectable(id) {
+    if (!getBgmInfoById(id)) return false;
+    if (id === 0 || id >= 1000) return id === 0 || isBgmFixed;
+    return id <= getMaxUnlockedDistrict();
+}
+
+function updateBgmFixedControls() {
+    const toggle = document.getElementById('bgm-fixed-toggle');
+    const listButton = document.getElementById('bgm-list-open-btn');
+    if (toggle) toggle.checked = isBgmFixed;
+    if (listButton) listButton.hidden = !isBgmFixed;
+}
+
+function toggleBgmFixed(isFixed) {
+    isBgmFixed = isFixed;
+    localStorage.setItem('Lmr_bgmFixed', String(isBgmFixed));
+    updateBgmFixedControls();
+    if (isBgmFixed && !isBgmIdSelectable(fixedBgmId)) {
+        const currentInfo = getBgmInfoByName(getExpectedBgmTrack(distance));
+        const currentEntry = currentInfo && Object.entries(window.bgmInfos)
+            .find(([, info]) => info === currentInfo);
+        fixedBgmId = currentEntry ? Number(currentEntry[0]) : 1;
+        localStorage.setItem('Lmr_fixedBgmId', String(fixedBgmId));
+    }
+    if (!isFirstClick && !isGameOver) startOrUpdateBgm();
+}
+
+function openBgmListModal() {
+    if (!isBgmFixed) return;
+    renderBgmList();
+    const modal = document.getElementById('bgm-list-modal');
+    if (!modal) return;
+    modal.classList.add('visible');
+    const closeButton = modal.querySelector('.bgm-list-close-btn');
+    if (closeButton) closeButton.focus();
+}
+
+function closeBgmListModal() {
+    const modal = document.getElementById('bgm-list-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    const openButton = document.getElementById('bgm-list-open-btn');
+    if (openButton) openButton.focus();
+}
+
+function renderBgmList() {
+    const list = document.getElementById('bgm-list');
+    if (!list || !window.bgmInfos) return;
+    if (!isBgmIdSelectable(fixedBgmId)) {
+        const currentInfo = getBgmInfoByName(getExpectedBgmTrack(distance));
+        const currentEntry = currentInfo && Object.entries(window.bgmInfos)
+            .find(([, info]) => info === currentInfo);
+        fixedBgmId = currentEntry ? Number(currentEntry[0]) : 1;
+        localStorage.setItem('Lmr_fixedBgmId', String(fixedBgmId));
+    }
+
+    list.replaceChildren();
+    Object.entries(window.bgmInfos)
+        .sort(([left], [right]) => Number(left) - Number(right))
+        .forEach(([idText, info]) => {
+            const id = Number(idText);
+            const row = document.createElement('tr');
+            const radioCell = document.createElement('td');
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'fixed-bgm';
+            radio.value = idText;
+            radio.checked = id === fixedBgmId;
+            radio.disabled = !isBgmIdSelectable(id);
+            if (radio.disabled) row.classList.add('bgm-locked-row');
+            radio.setAttribute('aria-label', `${id}: ${info.title}`);
+            radio.addEventListener('change', () => selectFixedBgm(id));
+            radioCell.appendChild(radio);
+            if (!radio.disabled) {
+                row.classList.add('bgm-selectable-row');
+                row.addEventListener('click', (event) => {
+                    if (event.target !== radio) radio.click();
+                });
+            }
+
+            const idCell = document.createElement('td');
+            idCell.textContent = idText;
+            const titleCell = document.createElement('td');
+            titleCell.textContent = info.title;
+            const authorCell = document.createElement('td');
+            authorCell.textContent = info.author;
+            row.append(radioCell, idCell, titleCell, authorCell);
+            list.appendChild(row);
+        });
+}
+
+function selectFixedBgm(id) {
+    if (!isBgmFixed || !isBgmIdSelectable(id)) return;
+    fixedBgmId = id;
+    localStorage.setItem('Lmr_fixedBgmId', String(fixedBgmId));
+    if (!isFirstClick && !isGameOver) startOrUpdateBgm();
 }
 
 function isDzPos(pos) {
@@ -221,6 +330,14 @@ function switchBgm(newTrack) {
         bgmFadeInterval = null;
     }
 
+    for (const audio of activeBgmAudios) {
+        if (audio !== currentBgmAudio) {
+            audio.pause();
+            audio.volume = 0;
+            activeBgmAudios.delete(audio);
+        }
+    }
+
     const oldAudio = currentBgmAudio;
     currentBgmTrack = newTrack;
 
@@ -231,6 +348,7 @@ function switchBgm(newTrack) {
     newAudio.loop = true;
     newAudio.volume = 0;
     currentBgmAudio = newAudio;
+    activeBgmAudios.add(newAudio);
 
     updateNowPlayingBgm();
     newAudio.addEventListener('playing', updateNowPlayingBgm);
@@ -257,6 +375,7 @@ function switchBgm(newTrack) {
             oldAudio.volume = Math.max(0, startOldVol * ratio);
             if (step === fadeOutSteps) {
                 oldAudio.pause();
+                activeBgmAudios.delete(oldAudio);
             }
         }
 
@@ -283,6 +402,13 @@ function stopBgmGameOver() {
     if (!currentBgmAudio) return;
 
     const audioToStop = currentBgmAudio;
+    for (const audio of activeBgmAudios) {
+        if (audio !== audioToStop) {
+            audio.pause();
+            audio.volume = 0;
+            activeBgmAudios.delete(audio);
+        }
+    }
     const initialVol = audioToStop.volume;
     const duration = 1000;
     const stepInterval = 40;
@@ -296,6 +422,7 @@ function stopBgmGameOver() {
         if (step >= totalSteps) {
             audioToStop.pause();
             audioToStop.volume = 0;
+            activeBgmAudios.delete(audioToStop);
             clearInterval(bgmFadeInterval);
             bgmFadeInterval = null;
             if (currentBgmAudio === audioToStop) {
@@ -312,10 +439,12 @@ function stopBgmImmediately() {
         clearInterval(bgmFadeInterval);
         bgmFadeInterval = null;
     }
-    if (currentBgmAudio) {
-        currentBgmAudio.pause();
-        currentBgmAudio = null;
+    for (const audio of activeBgmAudios) {
+        audio.pause();
+        audio.volume = 0;
     }
+    activeBgmAudios.clear();
+    currentBgmAudio = null;
     currentBgmTrack = null;
     updateNowPlayingBgm();
     const notification = document.getElementById('bgm-notification');
@@ -451,7 +580,12 @@ function startNowPlayingUpdates() {
 }
 
 document.addEventListener('keydown', (event) => {
+    const bgmModal = document.getElementById('bgm-list-modal');
     const modal = document.getElementById('settings-modal');
+    if (event.key === 'Escape' && bgmModal && bgmModal.classList.contains('visible')) {
+        closeBgmListModal();
+        return;
+    }
     if (event.key === 'Escape' && modal && modal.classList.contains('visible')) {
         closeSettingsModal();
     }
@@ -499,6 +633,16 @@ function updateTexts() {
     document.getElementById("difficulty-label").textContent = ja ? "難易度" : "Difficulty";
     document.getElementById("difficulty-select").value = String(difficulty);
     document.getElementById("background-label").textContent = ja ? "背景を表示" : "Show background";
+    document.getElementById("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
+    document.getElementById("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
+    document.getElementById("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
+    document.getElementById("bgm-list-radio-heading").textContent = ja ? "選択" : "Select";
+    document.getElementById("bgm-list-id-heading").textContent = "ID";
+    document.getElementById("bgm-list-track-heading").textContent = ja ? "BGM" : "BGM";
+    document.getElementById("bgm-list-author-heading").textContent = ja ? "作者" : "Author";
+    document.querySelector(".bgm-list-close-btn").setAttribute("aria-label", ja ? "BGM一覧を閉じる" : "Close BGM list");
+    updateBgmFixedControls();
+    if (document.getElementById('bgm-list-modal').classList.contains('visible')) renderBgmList();
     updateNowPlayingBgm();
     document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
     document.getElementById("footer-text").innerHTML = ja ? 
@@ -510,6 +654,7 @@ function updateTexts() {
 window.onload = () => {
     initVolume();
     applyBackgroundVisibility();
+    updateBgmFixedControls();
     updateTexts();
     resetGame();
 };
@@ -1056,6 +1201,8 @@ async function checkAdvanceAnimated() {
                 populateStartCheckpointOptions(startCheckpointSelect);
                 startCheckpointSelect.value = String(selectedStartCheckpoint);
             }
+            const bgmModal = document.getElementById('bgm-list-modal');
+            if (bgmModal && bgmModal.classList.contains('visible')) renderBgmList();
         }
         startOrUpdateBgm();
 
