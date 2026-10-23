@@ -1,15 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
 
-* {
-    box-sizing: border-box;
-}
+* {box-sizing: border-box;}
 
-html,
-body {
-    margin: 0;
-    min-height: 100%;
-}
-
+html, body {margin: 0; min-height: 100%;}
 .font-digital {font-family: 'Share Tech Mono', monospace !important;}
 
 body {
@@ -30,10 +23,22 @@ body {
     inset: 0;
     z-index: -1;
     opacity: .36;
+    transition: opacity 2s ease;
+    pointer-events: none;
+}
+
+.district-background-layer {
+    position: absolute;
+    inset: 0;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    pointer-events: none;
+    opacity: 0;
+    transition: opacity 2s ease;
+}
+
+.district-background-layer.is-active {
+    opacity: 1;
 }
 
 #district-background.background-hidden {

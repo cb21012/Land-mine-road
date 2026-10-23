@@ -9,7 +9,10 @@
     <link rel="stylesheet" href=".css">
 </head>
 <body class="no-select">
-    <div id="district-background" aria-hidden="true"></div>
+    <div id="district-background" aria-hidden="true">
+        <div class="district-background-layer" data-background-layer></div>
+        <div class="district-background-layer" data-background-layer></div>
+    </div>
 
     <button id="settings-open-btn" class="settings-open-btn" onclick="openSettingsModal()" aria-label="Settings">
         <i class="fa-solid fa-gear" aria-hidden="true"></i>
@@ -125,10 +128,14 @@
                         <option value="1">Hard</option>
                     </select>
                 </div>
-                <label class="settings-row settings-toggle-row" for="background-toggle">
-                    <span class="settings-label" id="background-label">Show background</span>
-                    <input type="checkbox" id="background-toggle" onchange="toggleBackground(this.checked)" checked>
-                </label>
+                <div class="settings-row">
+                    <label class="settings-label" id="background-label" for="background-mode">Background quality</label>
+                    <select id="background-mode" class="settings-select" onchange="setBackgroundMode(this.value)" aria-labelledby="background-label">
+                        <option id="background-high-option" value="high">High quality</option>
+                        <option id="background-low-option" value="low">Low quality</option>
+                        <option id="background-hidden-option" value="hidden">Hidden</option>
+                    </select>
+                </div>
                 <label class="settings-row settings-toggle-row" for="bgm-fixed-toggle">
                     <span class="settings-label" id="bgm-fixed-label">Fix BGM</span>
                     <input type="checkbox" id="bgm-fixed-toggle" onchange="toggleBgmFixed(this.checked)">
@@ -197,6 +204,10 @@
                 <div class="credits-section">
                     <h3>SE</h3>
                     <div id="se-credits-list" class="credits-list"></div>
+                </div>
+                <div class="credits-section">
+                    <h3>Img</h3>
+                    <div class="credits-list">Stable diffusion</div>
                 </div>
             </section>
         </section>

@@ -52,7 +52,10 @@ hp = mhp;
 
 //Config
 let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
-let showDistrictBackground = localStorage.getItem('Lmr_showBackground') !== 'false';
+const savedBackgroundMode = localStorage.getItem('Lmr_backgroundMode');
+let backgroundMode = ['high', 'low', 'hidden'].includes(savedBackgroundMode)
+    ? savedBackgroundMode
+    : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'high';
 let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
 let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
 let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
@@ -74,7 +77,7 @@ function notatVal(val) {
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.min(1e60, Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.01**level));
+    nextXp = Math.min(1e60, Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
 }
 
 function commitScoreAsXp() {
@@ -634,17 +637,30 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-function toggleBackground(isVisible) {
-    showDistrictBackground = isVisible;
+function setBackgroundMode(mode) {
+    backgroundMode = mode;
     applyBackgroundVisibility();
-    localStorage.setItem('Lmr_showBackground', String(showDistrictBackground));
+    localStorage.setItem('Lmr_backgroundMode', backgroundMode);
 }
 
 function applyBackgroundVisibility() {
     const background = document.getElementById('district-background');
-    const toggle = document.getElementById('background-toggle');
-    if (background) background.classList.toggle('background-hidden', !showDistrictBackground);
-    if (toggle) toggle.checked = showDistrictBackground;
+    const select = document.getElementById('background-mode');
+    const isVisible = backgroundMode !== 'hidden';
+    if (background) {
+        background.classList.toggle('background-hidden', !isVisible);
+        if (!isVisible) {
+            background.querySelectorAll('[data-background-layer]').forEach((layer) => {
+                layer.style.backgroundImage = 'none';
+                layer.classList.remove('is-active');
+            });
+            background.dataset.activeLayer = '0';
+            background.dataset.district = '';
+            background.dataset.quality = '';
+        }
+    }
+    if (select) select.value = backgroundMode;
+    if (isVisible) updateDistrictBackground();
 }
 
 function updateTexts() {
@@ -675,7 +691,11 @@ function updateTexts() {
     document.getElementById("language-label").textContent = ja ? "言語" : "Language";
     document.getElementById("difficulty-label").textContent = ja ? "難易度" : "Difficulty";
     document.getElementById("difficulty-select").value = String(difficulty);
-    document.getElementById("background-label").textContent = ja ? "背景を表示" : "Show background";
+    document.getElementById("background-label").textContent = ja ? "背景画質" : "Background quality";
+    document.getElementById("background-high-option").textContent = ja ? "高画質" : "High quality";
+    document.getElementById("background-low-option").textContent = ja ? "低画質" : "Low quality";
+    document.getElementById("background-hidden-option").textContent = ja ? "非表示" : "Hidden";
+    document.getElementById("background-mode").value = backgroundMode;
     document.getElementById("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
     document.getElementById("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
     document.getElementById("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
@@ -1306,11 +1326,7 @@ function incrementClick() {
 
 function updateStatsDisplay() {
     district = Math.floor(distance / AREA_LENGTH) + 1;
-    const background = document.getElementById('district-background');
-    if (background && background.dataset.district !== String(district)) {
-        background.dataset.district = String(district);
-        background.style.backgroundImage = `url("bg/${district}.png")`;
-    }
+    updateDistrictBackground();
     const traveledDistance = distance - startDistance;
     document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${traveledDistance}m`;
     document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
@@ -1329,6 +1345,43 @@ function updateStatsDisplay() {
         hpGauge.setAttribute('aria-valuetext', `${hp.toFixed(2)} / ${mhp}`);
     }
 }
+
+function updateDistrictBackground() {
+    if (backgroundMode === 'hidden') return;
+    const background = document.getElementById('district-background');
+    if (!background) return;
+
+    const districtValue = String(district);
+    if (background.dataset.district !== districtValue || background.dataset.quality !== backgroundMode) {
+        const extension = backgroundMode === 'low' ? 'jpg' : 'png';
+        const layers = background.querySelectorAll('[data-background-layer]');
+        if (layers.length !== 2) return;
+
+        const activeLayerIndex = Number(background.dataset.activeLayer ?? 0);
+        const activeLayer = layers[activeLayerIndex];
+        const nextLayerIndex = activeLayer.style.backgroundImage === '' ? activeLayerIndex : 1 - activeLayerIndex;
+        const nextLayer = layers[nextLayerIndex];
+        nextLayer.style.backgroundImage = `url("bg/${district}.${extension}")`;
+        nextLayer.classList.add('is-active');
+        if (nextLayer !== activeLayer) {
+            activeLayer.classList.remove('is-active');
+        }
+        background.dataset.activeLayer = String(nextLayerIndex);
+        background.dataset.district = districtValue;
+        background.dataset.quality = backgroundMode;
+    }
+}
+
+document.getElementById('district-background').addEventListener('transitionend', (event) => {
+    if (event.propertyName !== 'opacity') return;
+    const background = event.currentTarget;
+    const activeLayerIndex = Number(background.dataset.activeLayer ?? 0);
+    background.querySelectorAll('[data-background-layer]').forEach((layer, index) => {
+        if (index !== activeLayerIndex && !layer.classList.contains('is-active')) {
+            layer.style.backgroundImage = 'none';
+        }
+    });
+});
 
 function formatMoveSpeed() {
     const traveledDistance = distance - startDistance;
