@@ -1328,10 +1328,10 @@ function updateStatsDisplay() {
     district = Math.floor(distance / AREA_LENGTH) + 1;
     updateDistrictBackground();
     const traveledDistance = distance - startDistance;
-    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking text-emerald-400"></i> ${traveledDistance}m`;
-    document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer text-amber-400"></i> ${clicksCount}`;
-    document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock text-cyan-400"></i> ${formatTime(timerSeconds)}`;
-    document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high text-rose-400"></i> ${formatMoveSpeed()}`;
+    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking"></i> ${traveledDistance}m`;
+    document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer"></i> ${clicksCount}`;
+    document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock"></i> ${formatTime(timerSeconds)}`;
+    document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high"></i> ${formatMoveSpeed()}`;
     document.getElementById('district-count').textContent = String(district);
     document.getElementById('mine-rate').textContent = `${(mineRate * 100 * (isDzPos(distance) ? DZ_MINE_RATIO_MULT : 1)).toFixed(2)}%`;
     const displayedHp = document.getElementById('hp-value');
@@ -1507,6 +1507,3 @@ function closeModalAndReset() {
         resetGame();
     }, 300);
 }
-
-resetGame()
-updateTexts()
