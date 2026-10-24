@@ -76,20 +76,26 @@ function generateRandomName() {
     const key1 = !j? [
             "Cynical", "Funny", "Foolish", "Ergonomic", "Introvert", "Extrovert", "Omnivert", "Original", "Replicated", "Perfect",
             "Immortal", "Epic", "Delusional", "Apeirophobic", "Random", "Suspicious", "Common", "Ancestral", "Geometric", "Cooked",
-            "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless"
+            "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless", "Golden", "Inexistent", "Japanese-made",
+            
         ] : [
             "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的", "外向的", "内向的", "独創的", "複製体", "完全な",
-            "不滅の", "すごい", "妄想の", "無限恐怖症の", "無作為の", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
-            "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない"
+            "不滅の", "すごい", "妄想の", "無限恐怖症の", "どこかの", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
+            "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない", "金の", "存在しない", "日本産の",
+            
         ];
     const key2 = !j? [
-            "Steve", "Alex", "Jane", "John", "Sato", "Tanaka", "Marmot", "Cat", "Sodium", "Plutonium",
-            "Imposter", "Mirage", "Apple", "Landmine", "Fried rice", "Tomato", "Potato", "Pull request", "Vibe coding", "JavaScript",
-            "php", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Gunma Empire"
+            "Steve", "Alex", "Michael", "Mary", "John", "Sato", "Tanaka", "Suzuki", "Takahashi", "Ito",
+            "Marmot", "Cat", "Dog", "Shark", "Hornet", "Hydrogen", "Sodium", "Xenon", "Zinc", "Plutonium",
+            "Imposter", "Mirage", "Apple", "Landmine", "Fried rice", "Tomato", "Potato", "Lemon", "Tofu", "Almond",
+            "Pull request", "Vibe coding", "JavaScript", "php", "Python", "Linux", "Commit", "Conflict", "404 Error", "User Interface",
+            "Doomscroller", "Dopamine brat", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Gunma Empire"
         ] : [
-            "スティーブ", "アレックス", "ジェーン", "ジョン", "サトウ", "タナカ", "マーモット", "ネコ", "ナトリウム", "プルトニウム",
-            "詐欺師", "蜃気楼", "林檎", "地雷", "炒飯", "トマト", "ポテト", "プルリクエスト", "バイブコーディング", "JavaScript",
-            "php", "Cb", "勇者", "イリュージョナー", "破壊工作員", "天使", "グンマー帝国"
+            "スティーブ", "アレックス", "マイケル", "メアリー", "ジョン", "サトウ", "スズキ", "タナカ", "タカハシ", "イトウ", 
+            "マーモット", "猫", "犬", "サメ", "雀蜂", "水素", "ナトリウム", "キセノン", "亜鉛", "プルトニウム",
+            "詐欺師", "蜃気楼", "林檎", "地雷", "炒飯", "トマト", "ポテト", "檸檬", "豆腐", "アーモンド",
+            "プルリクエスト", "バイブコーディング", "JavaScript", "php", "Python", "Linux", "コミット", "コンフリクト", "404エラー", "ユーザーインターフェース"
+            "ドゥームスクローラー", "ドパガキ", "Cb", "勇者", "イリュージョナー", "破壊工作員", "天使", "グンマー帝国"
         ];
     let result = '';
     result += key1[Math.floor(Math.random() * key1.length)];
