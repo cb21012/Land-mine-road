@@ -77,12 +77,12 @@ function generateRandomName() {
             "Cynical", "Funny", "Foolish", "Ergonomic", "Introvert", "Extrovert", "Omnivert", "Original", "Replicated", "Perfect",
             "Immortal", "Epic", "Delusional", "Apeirophobic", "Random", "Suspicious", "Common", "Ancestral", "Geometric", "Cooked",
             "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless", "Golden", "Inexistent", "Japanese-made",
-            
+            "Lazy", "Intimidating", "Yandere", "A bucket of", "M0R1", "M6R5", "Compiled"
         ] : [
             "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的", "外向的", "内向的", "独創的", "複製体", "完全な",
             "不滅の", "すごい", "妄想の", "無限恐怖症の", "どこかの", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
             "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない", "金の", "存在しない", "日本産の",
-            
+            "怠けた", "威圧的な", "ヤンデレ", "バケツ1杯の", "無凸餅の", "完凸", "コンパイルされた"
         ];
     const key2 = !j? [
             "Steve", "Alex", "Michael", "Mary", "John", "Sato", "Tanaka", "Suzuki", "Takahashi", "Ito",
