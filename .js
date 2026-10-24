@@ -31,6 +31,22 @@ let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
 let gameRunId = 0;
 let isRunStatsCommitted = false;
 
+//player
+let level = Number(localStorage.getItem('Lmr_level') ?? 0), xp = Number(localStorage.getItem('Lmr_xp') ?? 0);
+let nextXp = 0;
+let isScoreCommitted = false;
+let lastGainedXp = 0;
+let lastLevelUpCount = 0;
+let mhp = 160, hp = 160, regen = 1.00;
+
+// BGM Audio Controller
+let currentBgmAudio = null;
+let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
+let bgmFadeInterval = null;
+const activeBgmAudios = new Set();
+let nowPlayingUpdateInterval = null;
+let nowPlayingStateKey = null;
+
 /*
 function generateRandomName() {
     const chars = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Ti", "V", "Cr", "Fe", "Ni", "Cu", "Zn", "Br", "Ag", "I", "W", "Pt", "Au", "Hg"];
@@ -139,13 +155,6 @@ function finalizeGameStats() {
     renderStatsModal();
 }
 
-//player
-let level = Number(localStorage.getItem('Lmr_level') ?? 0), xp = Number(localStorage.getItem('Lmr_xp') ?? 0);
-let nextXp = 0;
-let isScoreCommitted = false;
-let lastGainedXp = 0;
-let lastLevelUpCount = 0;
-
 function updatePlayerStats() {
     getPlayerNextXp();
     mhp = Math.floor(0.015*level**2 + level + 160);
@@ -157,8 +166,6 @@ function calcLmDmgAfter16(d) {
     for (let i = 0; i < d; i++) {A += add;if ((A & (A - 1)) === 0) {add = A / 16;}}
     return A;
 }
-
-let mhp = 160, hp = 160, regen = 1.00;
 updatePlayerStats();
 hp = mhp;
 
@@ -172,13 +179,6 @@ let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
 let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
 let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
 
-// BGM Audio Controller
-let currentBgmAudio = null;
-let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
-let bgmFadeInterval = null;
-const activeBgmAudios = new Set();
-let nowPlayingUpdateInterval = null;
-let nowPlayingStateKey = null;
 
 function notatVal(val) {
     if (val<1e7) return val;
