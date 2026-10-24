@@ -1,3 +1,5 @@
+const $ = (id) => document.getElementById(id);
+
 //Const
 const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA_LENGTH = 1600, CHECKPOINT_FREQ = 200;
 const DZ_START_POS = 1550, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.5;
@@ -27,6 +29,115 @@ let moveSpeed = 0, score = 0, timerInterval = null, lastUpdTime = 0;
 let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistrict = 1;
 let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
 let gameRunId = 0;
+let isRunStatsCommitted = false;
+
+/*
+function generateRandomName() {
+    const chars = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Ti", "V", "Cr", "Fe", "Ni", "Cu", "Zn", "Br", "Ag", "I", "W", "Pt", "Au", "Hg"];
+    const nums = ["", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"];
+    let result = ''; const len = Math.floor(Math.random() * 4) + 1;
+    for (let i = 0; i < len; i++) {
+        let rand = Math.floor(Math.random() * chars.length);
+        result += chars[rand]; chars.splice(rand, 1);
+        result += nums[Math.floor(Math.random() * nums.length)];
+    }
+    return result;
+}
+*/
+
+function generateRandomName() {
+    const j = clang===1;
+    const key1 = !j? [
+            "Cynical", "Funny", "Foolish", "Ergonomic", "Introvert", "Extrovert", "Omnivert", "Original", "Replicated", "Perfect",
+            "Immortal", "Epic", "Delusional", "Apeirophobic", "Random", "Suspicious", "Common", "Ancestral", "Geometric", "Cooked",
+            "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless"
+        ] : [
+            "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的", "外向的", "内向的", "独創的", "複製体", "完全な",
+            "不滅の", "すごい", "妄想の", "無限恐怖症の", "無作為の", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
+            "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない"
+        ];
+    const key2 = !j? [
+            "Steve", "Alex", "Jane", "John", "Sato", "Tanaka", "Marmot", "Cat", "Sodium", "Plutonium",
+            "Imposter", "Mirage", "Apple", "Landmine", "Fried rice", "Tomato", "Potato", "Pull request", "Vibe coding", "JavaScript",
+            "php", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Gunma Empire"
+        ] : [
+            "スティーブ", "アレックス", "ジェーン", "ジョン", "サトウ", "タナカ", "マーモット", "ネコ", "ナトリウム", "プルトニウム",
+            "詐欺師", "蜃気楼", "林檎", "地雷", "炒飯", "トマト", "ポテト", "プルリクエスト", "バイブコーディング", "JavaScript",
+            "php", "Cb", "勇者", "イリュージョナー", "破壊工作員", "天使", "グンマー帝国"
+        ];
+    let result = '';
+    result += key1[Math.floor(Math.random() * key1.length)];
+    if (!j) result += " ";
+    result += key2[Math.floor(Math.random() * key2.length)];
+    return result;
+}
+
+function loadPlayerName() {
+    const savedName = localStorage.getItem('Lmr_playerName');
+    if (savedName && savedName.trim() && savedName.length <= 32) return savedName;
+
+    const generatedName = generateRandomName();
+    localStorage.setItem('Lmr_playerName', generatedName);
+    return generatedName;
+}
+
+let playerName = loadPlayerName();
+
+function savePlayerName(value) {
+    const normalizedName = value.trim().slice(0, 20);
+    playerName = normalizedName || generateRandomName();
+    localStorage.setItem('Lmr_playerName', playerName);
+    $('player-name').value = playerName;
+}
+
+function loadGameStat(key) {
+    const value = Number(localStorage.getItem(key) ?? '0');
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+const gameStats = {
+    totalTime: loadGameStat('Lmr_totalTime'),
+    maxDist: loadGameStat('Lmr_maxDist'),
+    hiDist: loadGameStat('Lmr_hiDist'),
+    totalDist: loadGameStat('Lmr_totalDist'),
+    hiScore: loadGameStat('Lmr_hiScore'),
+    totalScore: loadGameStat('Lmr_totalScore'),
+    usedFlags: loadGameStat('Lmr_usedFlags'),
+    trueFlags: loadGameStat('Lmr_totalTf')
+};
+
+function saveGameStats() {
+    localStorage.setItem('Lmr_totalTime', String(gameStats.totalTime));
+    localStorage.setItem('Lmr_maxDist', String(gameStats.maxDist));
+    localStorage.setItem('Lmr_hiDist', String(gameStats.hiDist));
+    localStorage.setItem('Lmr_totalDist', String(gameStats.totalDist));
+    localStorage.setItem('Lmr_hiScore', String(gameStats.hiScore));
+    localStorage.setItem('Lmr_totalScore', String(gameStats.totalScore));
+    localStorage.setItem('Lmr_usedFlags', String(gameStats.usedFlags));
+    localStorage.setItem('Lmr_totalTf', String(gameStats.trueFlags));
+}
+
+function finalizeGameStats() {
+    if (isFirstClick || isRunStatsCommitted) return;
+
+    if (timerInterval) {
+        timerSeconds += (Date.now() - lastUpdTime) / 1000;
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    const traveledDistance = Math.max(0, distance - startDistance);
+    const finalScore = Math.round(score);
+    gameStats.totalTime += timerSeconds;
+    gameStats.maxDist = Math.max(gameStats.maxDist, distance);
+    gameStats.hiDist = Math.max(gameStats.hiDist, traveledDistance);
+    gameStats.totalDist += traveledDistance;
+    gameStats.hiScore = Math.max(gameStats.hiScore, finalScore);
+    gameStats.totalScore += finalScore;
+    isRunStatsCommitted = true;
+    saveGameStats();
+    renderStatsModal();
+}
 
 //player
 let level = Number(localStorage.getItem('Lmr_level') ?? 0), xp = Number(localStorage.getItem('Lmr_xp') ?? 0);
@@ -77,6 +188,34 @@ function notatVal(val) {
     return (val / (1e3 ** len)).toFixed(2) + sufi;
 }
 
+function formatMoveSpeed() {
+    const traveledDistance = distance - startDistance;
+    moveSpeed = timerSeconds > 0 ? traveledDistance * 3.6 / timerSeconds : 0;
+    return moveSpeed>1 ? `${moveSpeed.toFixed(2)} km/h` : `${(moveSpeed*1e3).toFixed(1)} m/h`
+}
+
+function formatTime(seconds, short=true) {
+    const s = short, j = clang===1;
+    const Y = s ? "y" : j ? "年" : "years, ", D = s ? "d" : j ? "日" : "day", H = s ? "h" : j ? "時間" : "hr ", M = s ? "m" : j ? "分" : "min ", S = s ? "s" : j ? "秒" : "sec";
+    if (seconds>31536e4) return `${Math.floor(seconds / 31536e3)}${Y}${Math.floor((seconds % 31536e3) / 86400)}${D}${!j?((seconds % 31536e3)/86400)>2?"s":"":""}`;
+    if (seconds>864e3) return `${Math.floor(seconds / 86400)}${D}${j?"":"s "}${String(Math.floor((seconds % 86400) / 3600)).padStart(2, '0')}${H}`;
+    if (seconds>36e3) return `${Math.floor(seconds / 3600)}${H}${String(Math.floor((seconds/60) % 60)).padStart(2, '0')}${M}`;
+    if (seconds>600) return `${Math.floor(seconds / 60)}${M}${String(Math.floor(seconds % 60)).padStart(2, '0')}${S}`;
+    if (seconds>10) return `${Math.floor(seconds)}.${String(Math.floor((seconds * 100)%100)).padStart(2, '0')}${S}`;
+    return `${Math.floor(seconds*1000)}ms`;
+}
+
+function formatDist(meter) {
+    const j = clang===1, lightDist = meter/299792458;
+    const LS = j ? "光秒" : "ls", LD = j ? "光日" : "ld", LY = j ? "光年" : "ly";
+    if (lightDist>31536e4) return `${(lightDist/31536e3).toFixed(2)}${LY}`;
+    if (lightDist>864e3) return `${(lightDist/86400).toFixed(2)}${LD}`;
+    if (lightDist>10) return `${lightDist.toFixed(2)}${LS}`;
+    if (meter>1e6) return `${(meter/1e3).toFixed(0)}km`;
+    if (meter>1e4) return `${(meter/1e3).toFixed(1)}km`;
+    return `${meter}m`
+}
+
 function getPlayerNextXp() {
     nextXp = Math.min(1e60, Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
 }
@@ -116,7 +255,7 @@ function commitScoreAsXp() {
 }
 
 function showLevelUpNotification(newLevel) {
-    const notification = document.getElementById('levelup-notification');
+    const notification = $('levelup-notification');
     if (!notification) return;
     const ja = clang === 1;
     notification.textContent = ja ? `レベルアップ！ Lv.${newLevel}` : `LEVEL UP! Lv.${newLevel}`;
@@ -129,10 +268,10 @@ function showLevelUpNotification(newLevel) {
 }
 
 function updatePlayerDisplay() {
-    const levelEl = document.getElementById('level-value');
-    const xpValueEl = document.getElementById('xp-value');
-    const xpBarEl = document.getElementById('xp-bar');
-    const regenValueEl = document.getElementById('regen-value');
+    const levelEl = $('level-value');
+    const xpValueEl = $('xp-value');
+    const xpBarEl = $('xp-bar');
+    const regenValueEl = $('regen-value');
 
     if (levelEl) levelEl.textContent = String(level);
     if (xpValueEl) xpValueEl.textContent = `${notatVal(Math.floor(xp))} / ${notatVal(nextXp)} XP`;
@@ -161,7 +300,7 @@ function getBgmInfoById(id) {
 
 function showBgmNotification(trackName) {
     const info = getBgmInfoByName(trackName);
-    const notification = document.getElementById('bgm-notification');
+    const notification = $('bgm-notification');
     if (!info || !notification) return;
 
     notification.textContent = `♪${info.title} - ${info.author}`;
@@ -200,8 +339,8 @@ function isBgmIdSelectable(id) {
 }
 
 function updateBgmFixedControls() {
-    const toggle = document.getElementById('bgm-fixed-toggle');
-    const listButton = document.getElementById('bgm-list-open-btn');
+    const toggle = $('bgm-fixed-toggle');
+    const listButton = $('bgm-list-open-btn');
     if (toggle) toggle.checked = isBgmFixed;
     if (listButton) listButton.hidden = !isBgmFixed;
 }
@@ -223,7 +362,7 @@ function toggleBgmFixed(isFixed) {
 function openBgmListModal() {
     if (!isBgmFixed) return;
     renderBgmList();
-    const modal = document.getElementById('bgm-list-modal');
+    const modal = $('bgm-list-modal');
     if (!modal) return;
     modal.classList.add('visible');
     const closeButton = modal.querySelector('.bgm-list-close-btn');
@@ -231,15 +370,15 @@ function openBgmListModal() {
 }
 
 function closeBgmListModal() {
-    const modal = document.getElementById('bgm-list-modal');
+    const modal = $('bgm-list-modal');
     if (!modal) return;
     modal.classList.remove('visible');
-    const openButton = document.getElementById('bgm-list-open-btn');
+    const openButton = $('bgm-list-open-btn');
     if (openButton) openButton.focus();
 }
 
 function openCreditsModal() {
-    const modal = document.getElementById('credits-modal');
+    const modal = $('credits-modal');
     if (!modal) return;
     modal.classList.add('visible');
     const closeButton = modal.querySelector('.credits-close-btn');
@@ -247,15 +386,70 @@ function openCreditsModal() {
 }
 
 function closeCreditsModal() {
-    const modal = document.getElementById('credits-modal');
+    const modal = $('credits-modal');
     if (!modal) return;
     modal.classList.remove('visible');
-    const openButton = document.getElementById('credits-open-btn');
+    const openButton = $('credits-open-btn');
     if (openButton) openButton.focus();
 }
 
+function openStatsModal() {
+    renderStatsModal();
+    const modal = $('stats-modal');
+    if (!modal) return;
+    modal.classList.add('visible');
+    const closeButton = modal.querySelector('.stats-close-btn');
+    if (closeButton) closeButton.focus();
+}
+
+function closeStatsModal() {
+    const modal = $('stats-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    const openButton = $('stats-open-btn');
+    if (openButton) openButton.focus();
+}
+
+function renderStatsModal() {
+    const activeTime = gameStats.totalTime + (timerInterval ? timerSeconds : 0);
+    const values = {
+        'stat-total-time': formatTime(activeTime, false),
+        'stat-district': String(getMaxUnlockedDistrict()),
+        'stat-max-dist': formatDist(gameStats.maxDist),
+        'stat-hi-dist': formatDist(gameStats.hiDist),
+        'stat-total-dist': formatDist(gameStats.totalDist),
+        'stat-hi-score': notatVal(gameStats.hiScore),
+        'stat-total-score': notatVal(gameStats.totalScore),
+        'stat-used-flags': String(gameStats.usedFlags),
+        'stat-true-flags': String(gameStats.trueFlags)
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const element = $(id);
+        if (element) element.textContent = value;
+    });
+}
+
+async function copyPlayerStats() {
+    const status = $('stats-copy-status');
+    const ja = clang === 1;
+    const xpProgress = nextXp > 0 ? (xp / nextXp * 100).toFixed(2) : '0.00';
+    const shareText = ja
+        ? `${playerName}\nレベル: ${level}\nXP: ${xpProgress}%\n地区: ${getMaxUnlockedDistrict()}`
+        : `${playerName}\nLevel: ${level}\nXP: ${xpProgress}%\nDistrict: ${getMaxUnlockedDistrict()}`;
+
+    status.textContent = '';
+    try {
+        if (!navigator.clipboard) throw new Error('Clipboard API is unavailable');
+        await navigator.clipboard.writeText(shareText);
+        status.textContent = ja ? 'コピーしました' : 'Copied to clipboard';
+    } catch (error) {
+        console.error('Failed to copy player stats:', error);
+        status.textContent = ja ? 'コピーに失敗しました' : 'Unable to copy to clipboard';
+    }
+}
+
 function renderBgmList() {
-    const list = document.getElementById('bgm-list');
+    const list = $('bgm-list');
     if (!list || !window.bgmInfos) return;
     if (!isBgmIdSelectable(fixedBgmId)) {
         const currentInfo = getBgmInfoByName(getExpectedBgmTrack(distance));
@@ -470,7 +664,7 @@ function stopBgmImmediately() {
     currentBgmAudio = null;
     currentBgmTrack = null;
     updateNowPlayingBgm();
-    const notification = document.getElementById('bgm-notification');
+    const notification = $('bgm-notification');
     if (notification) notification.classList.remove('is-playing');
 }
 
@@ -483,8 +677,9 @@ function setDifficulty(value) {
 }
 
 function openSettingsModal() {
-    const modal = document.getElementById('settings-modal');
+    const modal = $('settings-modal');
     if (!modal) return;
+    $('player-name').value = playerName;
     modal.classList.add('visible');
     startNowPlayingUpdates();
     const closeButton = modal.querySelector('.settings-close-btn');
@@ -492,19 +687,19 @@ function openSettingsModal() {
 }
 
 function closeSettingsModal() {
-    const modal = document.getElementById('settings-modal');
+    const modal = $('settings-modal');
     if (!modal) return;
     modal.classList.remove('visible');
     if (nowPlayingUpdateInterval) {
         clearInterval(nowPlayingUpdateInterval);
         nowPlayingUpdateInterval = null;
     }
-    const openButton = document.getElementById('settings-open-btn');
+    const openButton = $('settings-open-btn');
     if (openButton) openButton.focus();
 }
 
 function updateNowPlayingBgm() {
-    const section = document.getElementById('now-playing');
+    const section = $('now-playing');
     const audio = currentBgmAudio;
     if (!section) return;
 
@@ -513,13 +708,13 @@ function updateNowPlayingBgm() {
     if (stateKey === nowPlayingStateKey) return;
     nowPlayingStateKey = stateKey;
 
-    const track = document.getElementById('now-playing-track');
-    const credits = document.getElementById('now-playing-credits');
+    const track = $('now-playing-track');
+    const credits = $('now-playing-credits');
     if (!isPlaying) {
         track.textContent = 'None';
         credits.textContent = '---';
-        document.getElementById('now-playing-time').textContent = '---';
-        document.getElementById('now-playing-progress').value = 0;
+        $('now-playing-time').textContent = '---';
+        $('now-playing-progress').value = 0;
         section.hidden = false;
         return;
     }
@@ -528,7 +723,7 @@ function updateNowPlayingBgm() {
     const entry = entries.find(([, info]) => info.name === currentBgmTrack);
     const info = entry && entry[1];
     const ja = clang === 1;
-    document.getElementById('now-playing-title').textContent = ja ? '再生中のBGM' : 'Now playing';
+    $('now-playing-title').textContent = ja ? '再生中のBGM' : 'Now playing';
     credits.replaceChildren();
     if (!info) {
         track.textContent = 'None';
@@ -569,8 +764,8 @@ function updateNowPlayingBgm() {
 }
 
 function updateNowPlayingTime() {
-    const time = document.getElementById('now-playing-time');
-    const progress = document.getElementById('now-playing-progress');
+    const time = $('now-playing-time');
+    const progress = $('now-playing-progress');
     if (!time) return;
 
     const audio = currentBgmAudio;
@@ -595,8 +790,8 @@ function updateNowPlayingTime() {
 }
 
 function renderCredits() {
-    const bgmCredits = document.getElementById('bgm-credits-list');
-    const seCredits = document.getElementById('se-credits-list');
+    const bgmCredits = $('bgm-credits-list');
+    const seCredits = $('se-credits-list');
     if (!bgmCredits || !seCredits) return;
 
     bgmCredits.replaceChildren();
@@ -625,15 +820,20 @@ function startNowPlayingUpdates() {
 }
 
 document.addEventListener('keydown', (event) => {
-    const bgmModal = document.getElementById('bgm-list-modal');
-    const creditsModal = document.getElementById('credits-modal');
-    const modal = document.getElementById('settings-modal');
+    const bgmModal = $('bgm-list-modal');
+    const creditsModal = $('credits-modal');
+    const statsModal = $('stats-modal');
+    const modal = $('settings-modal');
     if (event.key === 'Escape' && bgmModal && bgmModal.classList.contains('visible')) {
         closeBgmListModal();
         return;
     }
     if (event.key === 'Escape' && creditsModal && creditsModal.classList.contains('visible')) {
         closeCreditsModal();
+        return;
+    }
+    if (event.key === 'Escape' && statsModal && statsModal.classList.contains('visible')) {
+        closeStatsModal();
         return;
     }
     if (event.key === 'Escape' && modal && modal.classList.contains('visible')) {
@@ -648,8 +848,8 @@ function setBackgroundMode(mode) {
 }
 
 function applyBackgroundVisibility() {
-    const background = document.getElementById('district-background');
-    const select = document.getElementById('background-mode');
+    const background = $('district-background');
+    const select = $('background-mode');
     const isVisible = backgroundMode !== 'hidden';
     if (background) {
         background.classList.toggle('background-hidden', !isVisible);
@@ -669,53 +869,71 @@ function applyBackgroundVisibility() {
 
 function updateTexts() {
     const ja = clang===1;
-    document.getElementById("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
-    document.getElementById("restart-btn").textContent = ja ? "最初から" : "Restart";
-    document.getElementById("district-stats-bar").innerHTML = 
+    $("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
+    $("restart-btn").textContent = ja ? "最初から" : "Restart";
+    $("district-stats-bar").innerHTML = 
         ja ? `<b id="district-count" class="stat-value district-value">${district}</b> 区<br>地雷率 : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>` 
         : `District  <b id="district-count" class="stat-value district-value">${district}</b><br>Mine rate : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>`;
     
     document.querySelectorAll("#start-district option").forEach((option) => {
         option.textContent = ja ? `${option.value}区` : `District ${option.value}`;
     });
-    const finalScoreLabel = document.getElementById("final-score-label");
+    const finalScoreLabel = $("final-score-label");
     if (finalScoreLabel) finalScoreLabel.textContent = ja ? "スコア" : "SCORE";
-    const finalDistLabel = document.getElementById("final-distance-label");
+    const finalDistLabel = $("final-distance-label");
     if (finalDistLabel) finalDistLabel.textContent = ja ? "距離" : "DISTANCE";
-    document.getElementById("final-speed-label").textContent = ja ? "速度" : "SPEED";
-    document.getElementById("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
-    document.getElementById("modal-desc").textContent = ja ? "うお" : "Oof";
-    document.getElementById("retry-btn").textContent = ja ? "再試行" : "Try again";
-    document.getElementById("lang-btn").textContent = ja ? "Ja" : "En";
-    document.getElementById("settings-title").textContent = ja ? "設定" : "Settings";
-    document.getElementById("settings-button-label").textContent = ja ? "設定" : "Settings";
-    document.getElementById("settings-open-btn").setAttribute("aria-label", ja ? "設定" : "Settings");
-    document.getElementById("bgm-volume-label").textContent = ja ? "BGM音量" : "BGM volume";
-    document.getElementById("se-volume-label").textContent = ja ? "効果音音量" : "SE volume";
-    document.getElementById("language-label").textContent = ja ? "言語" : "Language";
-    document.getElementById("difficulty-label").textContent = ja ? "難易度" : "Difficulty";
-    document.getElementById("difficulty-select").value = String(difficulty);
-    document.getElementById("background-label").textContent = ja ? "背景画質" : "Background quality";
-    document.getElementById("background-high-option").textContent = ja ? "高画質" : "High quality";
-    document.getElementById("background-low-option").textContent = ja ? "低画質" : "Low quality";
-    document.getElementById("background-hidden-option").textContent = ja ? "非表示" : "Hidden";
-    document.getElementById("background-mode").value = backgroundMode;
-    document.getElementById("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
-    document.getElementById("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
-    document.getElementById("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
-    document.getElementById("credits-title").textContent = ja ? "クレジット" : "Credits";
-    document.getElementById("credits-open-label").textContent = ja ? "クレジット" : "Credits";
-    document.getElementById("bgm-list-radio-heading").textContent = ja ? "選択" : "Select";
-    document.getElementById("bgm-list-id-heading").textContent = "ID";
-    document.getElementById("bgm-list-track-heading").textContent = ja ? "BGM" : "BGM";
-    document.getElementById("bgm-list-author-heading").textContent = ja ? "作者" : "Author";
+    $("final-speed-label").textContent = ja ? "速度" : "SPEED";
+    $("modal-title").textContent = ja ? "死んだンゴ" : "You died!";
+    $("modal-desc").textContent = ja ? "うお" : "Oof";
+    $("retry-btn").textContent = ja ? "再試行" : "Try again";
+    $("lang-btn").textContent = ja ? "Ja" : "En";
+    $("settings-title").textContent = ja ? "設定" : "Settings";
+    $("settings-button-label").textContent = ja ? "設定" : "Settings";
+    $("settings-open-btn").setAttribute("aria-label", ja ? "設定" : "Settings");
+    $("player-name-label").textContent = ja ? "名前" : "Name";
+    $("player-name").value = playerName;
+    $("player-name").setAttribute("aria-label", ja ? "名前（20文字まで）" : "Name (up to 20 characters)");
+    $("stats-button-label").textContent = ja ? "統計" : "Statistics";
+    $("stats-open-btn").setAttribute("aria-label", ja ? "統計" : "Statistics");
+    $("stats-title").textContent = ja ? "統計" : "Statistics";
+    $("stats-copy-btn-label").textContent = ja ? "シェア情報をコピー" : "Copy share info";
+    $("stats-copy-status").textContent = "";
+    $("stat-total-time-label").textContent = ja ? "合計時間" : "Total time";
+    $("stat-district-label").textContent = ja ? "地区" : "District";
+    $("stat-max-dist-label").textContent = ja ? "最遠距離" : "Max distance";
+    $("stat-hi-dist-label").textContent = ja ? "最長到達距離" : "Longest distance";
+    $("stat-total-dist-label").textContent = ja ? "合計距離" : "Total distance";
+    $("stat-hi-score-label").textContent = ja ? "最高点" : "Highest score";
+    $("stat-total-score-label").textContent = ja ? "合計点" : "Total score";
+    $("stat-used-flags-label").textContent = ja ? "旗を刺した数" : "Used flags";
+    $("stat-true-flags-label").textContent = ja ? "正しく利用された旗" : "True flags";
+    document.querySelector(".stats-close-btn").setAttribute("aria-label", ja ? "統計を閉じる" : "Close statistics");
+    $("bgm-volume-label").textContent = ja ? "BGM音量" : "BGM volume";
+    $("se-volume-label").textContent = ja ? "効果音音量" : "SE volume";
+    $("language-label").textContent = ja ? "言語" : "Language";
+    $("difficulty-label").textContent = ja ? "難易度" : "Difficulty";
+    $("difficulty-select").value = String(difficulty);
+    $("background-label").textContent = ja ? "背景画質" : "Background quality";
+    $("background-high-option").textContent = ja ? "高画質" : "High quality";
+    $("background-low-option").textContent = ja ? "低画質" : "Low quality";
+    $("background-hidden-option").textContent = ja ? "非表示" : "Hidden";
+    $("background-mode").value = backgroundMode;
+    $("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
+    $("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
+    $("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
+    $("credits-title").textContent = ja ? "クレジット" : "Credits";
+    $("credits-open-label").textContent = ja ? "クレジット" : "Credits";
+    $("bgm-list-radio-heading").textContent = ja ? "選択" : "Select";
+    $("bgm-list-id-heading").textContent = "ID";
+    $("bgm-list-track-heading").textContent = ja ? "BGM" : "BGM";
+    $("bgm-list-author-heading").textContent = ja ? "作者" : "Author";
     document.querySelector(".bgm-list-close-btn").setAttribute("aria-label", ja ? "BGM一覧を閉じる" : "Close BGM list");
     document.querySelector(".credits-close-btn").setAttribute("aria-label", ja ? "クレジットを閉じる" : "Close credits");
     updateBgmFixedControls();
-    if (document.getElementById('bgm-list-modal').classList.contains('visible')) renderBgmList();
+    if ($('bgm-list-modal').classList.contains('visible')) renderBgmList();
     updateNowPlayingBgm();
     document.querySelector(".settings-close-btn").setAttribute("aria-label", ja ? "設定を閉じる" : "Close settings");
-    document.getElementById("footer-text").innerHTML = ja ? 
+    $("footer-text").innerHTML = ja ? 
         `左クリック、掘削モード中のタップ : 掘る / 右クリック、旗モード中のタップ : 旗<br>
         数字が周囲の旗の数と一致しているとき、その数字をクリックする : コーディング<br>
         前方5メートルの45/65マスを掘削して前に進もう` : 
@@ -723,6 +941,7 @@ function updateTexts() {
         Click on number if number equals to flags amount : Chord<br>
         Clear 45/65 cells in front 5m to advance!`;
     updatePlayerDisplay();
+    renderStatsModal();
 }
 
 window.onload = () => {
@@ -742,8 +961,8 @@ function initVolume() {
             seVolume = parsed;
         }
     }
-    const seSlider = document.getElementById('se-volume');
-    const seText = document.getElementById('volume-text');
+    const seSlider = $('se-volume');
+    const seText = $('volume-text');
     if (seSlider) seSlider.value = seVolume;
     if (seText) seText.innerText = `${seVolume}%`;
 
@@ -754,8 +973,8 @@ function initVolume() {
             bgmVolume = parsedBgm;
         }
     }
-    const bgmSlider = document.getElementById('bgm-volume');
-    const bgmText = document.getElementById('bgm-volume-text');
+    const bgmSlider = $('bgm-volume');
+    const bgmText = $('bgm-volume-text');
     if (bgmSlider) bgmSlider.value = bgmVolume;
     if (bgmText) bgmText.innerText = `${bgmVolume}%`;
 }
@@ -763,14 +982,14 @@ function initVolume() {
 function updateVolume(val) {
     seVolume = parseInt(val, 10);
     localStorage.setItem('Lmr_seVol', seVolume);
-    const text = document.getElementById('volume-text');
+    const text = $('volume-text');
     if (text) text.innerText = `${seVolume}%`;
 }
 
 function updateBgmVolume(val) {
     bgmVolume = parseInt(val, 10);
     localStorage.setItem('Lmr_bgmVol', bgmVolume);
-    const text = document.getElementById('bgm-volume-text');
+    const text = $('bgm-volume-text');
     if (text) text.innerText = `${bgmVolume}%`;
     if (currentBgmAudio && !bgmFadeInterval) {
         currentBgmAudio.volume = getBgmTargetVolume(currentBgmTrack);
@@ -784,6 +1003,7 @@ function playMineSe() {
 }
 
 function resetGame() {
+    finalizeGameStats();
     gameRunId++;
     if (!isScoreCommitted && score > 0) {
         const result = commitScoreAsXp();
@@ -792,6 +1012,7 @@ function resetGame() {
         }
     }
     isScoreCommitted = false;
+    isRunStatsCommitted = false;
     lastGainedXp = 0;
     lastLevelUpCount = 0;
 
@@ -821,9 +1042,9 @@ function resetGame() {
     isGameOver = false;
     isSliding = false;
 
-    const startCheckpointSelect = document.getElementById('start-checkpoint');
-    const startDistrictSelect = document.getElementById('start-district');
-    const startCheckpointControl = document.getElementById('start-checkpoint-control');
+    const startCheckpointSelect = $('start-checkpoint');
+    const startDistrictSelect = $('start-district');
+    const startCheckpointControl = $('start-checkpoint-control');
     if (startCheckpointControl) startCheckpointControl.hidden = false;
     if (startDistrictSelect) {
         startDistrictSelect.replaceChildren();
@@ -842,7 +1063,7 @@ function resetGame() {
         startCheckpointSelect.disabled = false;
     }
 
-    const boardEl = document.getElementById('board');
+    const boardEl = $('board');
     if (boardEl) {
         boardEl.classList.remove('is-sliding');
         boardEl.style.transform = 'translateX(0)';
@@ -992,7 +1213,7 @@ function getStartCol() {
 }
 
 function renderBoard() {
-    const boardEl = document.getElementById('board');
+    const boardEl = $('board');
     boardEl.innerHTML = '';
 
     const startCol = getStartCol();
@@ -1122,9 +1343,9 @@ async function handleCellClick(r, c) {
 
     if (isFirstClick) {
         isFirstClick = false;
-        document.getElementById('start-checkpoint-control').hidden = true;
-        document.getElementById('start-checkpoint').disabled = true;
-        document.getElementById('start-district').disabled = true;
+        $('start-checkpoint-control').hidden = true;
+        $('start-checkpoint').disabled = true;
+        $('start-district').disabled = true;
         startTimer();
         startOrUpdateBgm();
         const generatedStartCol = getStartCol();
@@ -1250,7 +1471,7 @@ async function checkAdvanceAnimated() {
     if (!canAdvanceNext()) return;
 
     isSliding = true;
-    const boardEl = document.getElementById('board');
+    const boardEl = $('board');
     if (boardEl) boardEl.classList.add('is-sliding');
 
     while (canAdvanceNext()) {
@@ -1265,7 +1486,7 @@ async function checkAdvanceAnimated() {
             selectedStartDistrict = Math.floor(distance / AREA_LENGTH) + 1;
             selectedStartCheckpoint = passedCheckpointCount;
             localStorage.setItem('Lmr_passedCP', String(passedCheckpointCount));
-            const startDistrictSelect = document.getElementById('start-district');
+            const startDistrictSelect = $('start-district');
             if (startDistrictSelect && !Array.from(startDistrictSelect.options)
                 .some((option) => Number.parseInt(option.value, 10) === selectedStartDistrict)) {
                 const option = document.createElement('option');
@@ -1274,12 +1495,12 @@ async function checkAdvanceAnimated() {
                 startDistrictSelect.appendChild(option);
             }
             if (startDistrictSelect) startDistrictSelect.value = String(selectedStartDistrict);
-            const startCheckpointSelect = document.getElementById('start-checkpoint');
+            const startCheckpointSelect = $('start-checkpoint');
             if (startCheckpointSelect) {
                 populateStartCheckpointOptions(startCheckpointSelect);
                 startCheckpointSelect.value = String(selectedStartCheckpoint);
             }
-            const bgmModal = document.getElementById('bgm-list-modal');
+            const bgmModal = $('bgm-list-modal');
             if (bgmModal && bgmModal.classList.contains('visible')) renderBgmList();
         }
         startOrUpdateBgm();
@@ -1301,7 +1522,7 @@ async function checkAdvanceAnimated() {
 
 function animateSlideStep(runId) {
     return new Promise((resolve) => {
-        const boardEl = document.getElementById('board');
+        const boardEl = $('board');
         if (!boardEl) {
             resolve();
             return;
@@ -1327,10 +1548,20 @@ function animateSlideStep(runId) {
 }
 
 function cleanupOldColumns(cutoffCol) {
+    let removedFlags = false;
     for (let [key, cell] of boardMap.entries()) {
         if (cell.c < cutoffCol) {
+            if (cell.isFlagged) {
+                gameStats.usedFlags++;
+                if (cell.isMine) gameStats.trueFlags++;
+                removedFlags = true;
+            }
             boardMap.delete(key);
         }
+    }
+    if (removedFlags) {
+        saveGameStats();
+        renderStatsModal();
     }
 }
 
@@ -1343,15 +1574,15 @@ function updateStatsDisplay() {
     district = Math.floor(distance / AREA_LENGTH) + 1;
     updateDistrictBackground();
     const traveledDistance = distance - startDistance;
-    document.getElementById('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking"></i> ${traveledDistance}m`;
-    document.getElementById('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer"></i> ${clicksCount}`;
-    document.getElementById('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock"></i> ${formatTime(timerSeconds)}`;
-    document.getElementById('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high"></i> ${formatMoveSpeed()}`;
-    document.getElementById('district-count').textContent = String(district);
-    document.getElementById('mine-rate').textContent = `${(mineRate * 100 * (isDzPos(distance) ? DZ_MINE_RATIO_MULT : 1)).toFixed(2)}%`;
-    const displayedHp = document.getElementById('hp-value');
-    const hpBar = document.getElementById('hp-bar');
-    const hpGauge = document.getElementById('hp-gauge');
+    $('distance-count').innerHTML = `<i class="stat-icon fa-solid fa-person-walking"></i> ${traveledDistance}m`;
+    $('clicks-count').innerHTML = `<i class="stat-icon fa-solid fa-arrow-pointer"></i> ${clicksCount}`;
+    $('timer').innerHTML = `<i class="stat-icon fa-regular fa-clock"></i> ${formatTime(timerSeconds)}`;
+    $('move-speed').innerHTML = `<i class="stat-icon fa-solid fa-gauge-high"></i> ${formatMoveSpeed()}`;
+    $('district-count').textContent = String(district);
+    $('mine-rate').textContent = `${(mineRate * 100 * (isDzPos(distance) ? DZ_MINE_RATIO_MULT : 1)).toFixed(2)}%`;
+    const displayedHp = $('hp-value');
+    const hpBar = $('hp-bar');
+    const hpGauge = $('hp-gauge');
     if (displayedHp) displayedHp.textContent = `${Math.ceil(hp)} / ${mhp}`;
     if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, hp / mhp * 100))}%`;
     if (hpGauge) {
@@ -1363,7 +1594,7 @@ function updateStatsDisplay() {
 
 function updateDistrictBackground() {
     if (backgroundMode === 'hidden') return;
-    const background = document.getElementById('district-background');
+    const background = $('district-background');
     if (!background) return;
 
     const districtValue = String(district);
@@ -1387,7 +1618,7 @@ function updateDistrictBackground() {
     }
 }
 
-document.getElementById('district-background').addEventListener('transitionend', (event) => {
+$('district-background').addEventListener('transitionend', (event) => {
     if (event.propertyName !== 'opacity') return;
     const background = event.currentTarget;
     const activeLayerIndex = Number(background.dataset.activeLayer ?? 0);
@@ -1397,23 +1628,6 @@ document.getElementById('district-background').addEventListener('transitionend',
         }
     });
 });
-
-function formatMoveSpeed() {
-    const traveledDistance = distance - startDistance;
-    moveSpeed = timerSeconds > 0 ? traveledDistance * 3.6 / timerSeconds : 0;
-    return moveSpeed>1 ? `${moveSpeed.toFixed(2)} km/h` : `${(moveSpeed*1e3).toFixed(1)} m/h`
-}
-
-function formatTime(seconds, short=true) {
-    const s = !short, j = clang===1;
-    const D = s ? "d" : j ? "日" : "days ", H = s ? "h" : j ? "時間" : "hr ", M = s ? "m" : j ? "分" : "min ", S = s ? "s" : j ? "秒" : "sec";
-    if (seconds>864e3) return `${Math.floor(seconds / 86400)}${D}${String(Math.floor((seconds % 86400) / 3600)).padStart(2, '0')}${H}`
-    if (seconds>36e3) return `${Math.floor(seconds / 3600)}${H}${String(Math.floor((seconds/60) % 60)).padStart(2, '0')}${M}`
-    if (seconds>600) return `${Math.floor(seconds / 60)}${M}${String(Math.floor(seconds % 60)).padStart(2, '0')}${S}`
-    if (seconds>10) return `${Math.floor(seconds)}.${String(Math.floor((seconds * 100)%100)).padStart(2, '0')}${S}`
-    return `${Math.floor(seconds*1000)}ms`
-
-}
 
 function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -1429,14 +1643,14 @@ function startTimer() {
 function toggleFlagMode() {
     if (isSliding) return;
     isFlagModeMobile = !isFlagModeMobile;
-    const btn = document.getElementById('mobile-flag-btn');
-    const text = document.getElementById('flag-mode-text');
+    const btn = $('mobile-flag-btn');
+    const text = $('flag-mode-text');
     if (isFlagModeMobile) {
         btn.classList.add('flag-active');
     } else {
         btn.classList.remove('flag-active');
     }
-    document.getElementById("flag-mode-text").textContent = clang===1 ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
+    $("flag-mode-text").textContent = clang===1 ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
 }
 
 function damageMine(cell) {
@@ -1451,8 +1665,9 @@ function damageMine(cell) {
 function triggerGameOver(explodedCell) {
     stopBgmGameOver();
     isGameOver = true;
-    clearInterval(timerInterval);
     score = Math.round(score);
+    finalizeGameStats();
+    clearInterval(timerInterval);
     const result = commitScoreAsXp();
     if (result.leveledUp) {
         showLevelUpNotification(result.endLevel);
@@ -1482,7 +1697,7 @@ function triggerGameOver(explodedCell) {
     for (let r = 0; r < ROWS; r++) {
         for (let c = startCol; c < endCol; c++) {
             const cell = getCell(r, c);
-            const cellBtn = document.getElementById(`cell-${r}-${c}`);
+            const cellBtn = $(`cell-${r}-${c}`);
             if (!cell || !cellBtn) continue;
             if (cell.isMine) {
                 if (cell === explodedCell) {
@@ -1502,12 +1717,12 @@ function triggerGameOver(explodedCell) {
 }
 
 function showModal() {
-    const modal = document.getElementById('modal');
-    const modalCard = document.getElementById('modal-card');
+    const modal = $('modal');
+    const modalCard = $('modal-card');
 
-    document.getElementById('final-distance').innerText = `${distance}m`;
-    document.getElementById('final-speed').innerText = String(formatMoveSpeed());
-    document.getElementById('final-score').innerText = String(notatVal(score));
+    $('final-distance').innerText = `${distance}m`;
+    $('final-speed').innerText = String(formatMoveSpeed());
+    $('final-score').innerText = String(notatVal(score));
 
     modal.classList.add('visible');
     setTimeout(() => {
@@ -1517,8 +1732,8 @@ function showModal() {
 }
 
 function closeModalAndReset() {
-    const modal = document.getElementById('modal');
-    const modalCard = document.getElementById('modal-card');
+    const modal = $('modal');
+    const modalCard = $('modal-card');
 
     modal.classList.remove('show');
     modalCard.classList.remove('show');
