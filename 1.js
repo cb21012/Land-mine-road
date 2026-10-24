@@ -47,6 +47,16 @@ const activeBgmAudios = new Set();
 let nowPlayingUpdateInterval = null;
 let nowPlayingStateKey = null;
 
+//Config
+let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
+const savedBackgroundMode = localStorage.getItem('Lmr_backgroundMode');
+let backgroundMode = ['high', 'low', 'hidden'].includes(savedBackgroundMode)
+    ? savedBackgroundMode
+    : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'high';
+let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
+let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
+let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
+
 /*
 function generateRandomName() {
     const chars = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Ti", "V", "Cr", "Fe", "Ni", "Cu", "Zn", "Br", "Ag", "I", "W", "Pt", "Au", "Hg"];
@@ -168,16 +178,6 @@ function calcLmDmgAfter16(d) {
 }
 updatePlayerStats();
 hp = mhp;
-
-//Config
-let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
-const savedBackgroundMode = localStorage.getItem('Lmr_backgroundMode');
-let backgroundMode = ['high', 'low', 'hidden'].includes(savedBackgroundMode)
-    ? savedBackgroundMode
-    : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'high';
-let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
-let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
-let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
 
 
 function notatVal(val) {
