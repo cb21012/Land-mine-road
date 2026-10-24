@@ -43,7 +43,8 @@ window.authorUrls = {
     "DONG": "https://yh.16dimensional.com/",
     "MAOU": "https://opengameart.org/users/maou",
     "Scott Elliott": "https://opengameart.org/users/scrabbit",
-    "効果音ラボ": "https://soundeffect-lab.info/",
+    "rubberduck": "https://opengameart.org/users/rubberduck",
+    "WobbleBoxx Workshop": "https://opengameart.org/users/wobbleboxx",
 }
 
 window.licenseUrls = {

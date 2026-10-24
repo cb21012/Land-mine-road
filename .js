@@ -11,7 +11,7 @@ const DISTRICT_MINE_RATIO = [
     1/4.85, 1/4.82, 1/4.79, 1/4.76, 1/4.73, 1/4.7, 1/4.67, 1/4.64, 1/4.61, 1/4.58, 
     1/4.55, 1/4.52, 1/4.5
 ];
-const DISTRICT_MINE_DMG   = [128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256];
+const DISTRICT_MINE_DMG   = [128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512];
 
 //Map
 let maxGeneratedCol = 0;
@@ -26,6 +26,7 @@ let distance = 0, district = 1, mineRate = DISTRICT_MINE_RATIO[0], lmDmg = DISTR
 let moveSpeed = 0, score = 0, timerInterval = null, lastUpdTime = 0;
 let passedCheckpointCount = 0, selectedStartCheckpoint = 0, selectedStartDistrict = 1;
 let startDistance = 0; // ゲーム開始時のdistance（スタート位置）
+let gameRunId = 0;
 
 //player
 let level = Number(localStorage.getItem('Lmr_level') ?? 0), xp = Number(localStorage.getItem('Lmr_xp') ?? 0);
@@ -37,12 +38,12 @@ let lastLevelUpCount = 0;
 function updatePlayerStats() {
     getPlayerNextXp();
     mhp = Math.floor(0.015*level**2 + level + 160);
-    regen = level*.0167 + 1 + mhp/2000;
+    regen = level*.0167 + 1 + mhp/1000;
 }
 
 function calcLmDmgAfter16(d) {
-    let A = 64, add = 8;
-    for (let i = 0; i < d; i++) {A += add;if ((A & (A - 1)) === 0) {add = A / 8;}}
+    let A = 512, add = 32;
+    for (let i = 0; i < d; i++) {A += add;if ((A & (A - 1)) === 0) {add = A / 16;}}
     return A;
 }
 
@@ -122,6 +123,9 @@ function showLevelUpNotification(newLevel) {
     notification.classList.remove('is-showing');
     void notification.offsetWidth;
     notification.classList.add('is-showing');
+    const audio = new Audio('sebgm/lu.mp3');
+    audio.volume = seVolume / 100;
+    audio.play();
 }
 
 function updatePlayerDisplay() {
@@ -328,8 +332,8 @@ function updateMineRate() {
         return;
     }
     const currentDistrict = Math.floor(distance / AREA_LENGTH) + 1;
-    lmDmg = currentDistrict >= 16
-        ? calcLmDmgAfter16(currentDistrict)
+    lmDmg = currentDistrict > DISTRICT_MINE_DMG.length
+        ? calcLmDmgAfter16(currentDistrict - DISTRICT_MINE_DMG.length)
         : getDistrictValueAtDistance(DISTRICT_MINE_DMG, distance);
 }
 
@@ -608,7 +612,7 @@ function renderCredits() {
         link.rel = 'noopener noreferrer';
         link.textContent = url;
         entry.append(name, link);
-        (author === '効果音ラボ' ? seCredits : bgmCredits).append(entry);
+        (["rubberduck", "WobbleBoxx Workshop"].includes(author) ? seCredits : bgmCredits).append(entry);
     });
 }
 
@@ -775,11 +779,12 @@ function updateBgmVolume(val) {
 
 function playMineSe() {
     const audio = new Audio("sebgm/lm.mp3");
-    audio.volume = 0.6 * seVolume / 100;
+    audio.volume = seVolume / 100;
     audio.play();
 }
 
 function resetGame() {
+    gameRunId++;
     if (!isScoreCommitted && score > 0) {
         const result = commitScoreAsXp();
         if (result.leveledUp) {
@@ -1241,6 +1246,7 @@ function canAdvanceNext() {
 }
 
 async function checkAdvanceAnimated() {
+    const runId = gameRunId;
     if (!canAdvanceNext()) return;
 
     isSliding = true;
@@ -1248,7 +1254,8 @@ async function checkAdvanceAnimated() {
     if (boardEl) boardEl.classList.add('is-sliding');
 
     while (canAdvanceNext()) {
-        await animateSlideStep();
+        await animateSlideStep(runId);
+        if (runId !== gameRunId) return;
 
         distance++;
         hp = Math.min(mhp, hp + regen);
@@ -1286,11 +1293,13 @@ async function checkAdvanceAnimated() {
         renderBoard();
     }
 
-    if (boardEl) boardEl.classList.remove('is-sliding');
-    isSliding = false;
+    if (runId === gameRunId) {
+        if (boardEl) boardEl.classList.remove('is-sliding');
+        isSliding = false;
+    }
 }
 
-function animateSlideStep() {
+function animateSlideStep(runId) {
     return new Promise((resolve) => {
         const boardEl = document.getElementById('board');
         if (!boardEl) {
@@ -1304,7 +1313,13 @@ function animateSlideStep() {
         if (distance >= 8) {
             boardEl.style.transition = 'transform 0.1s linear';
             boardEl.style.transform = `translateX(-${stepPx}px)`;
-            setTimeout(() => {boardEl.style.transition = 'none'; boardEl.style.transform = 'translateX(0)'; resolve();}, 1000/progressSpeed);
+            setTimeout(() => {
+                if (runId === gameRunId) {
+                    boardEl.style.transition = 'none';
+                    boardEl.style.transform = 'translateX(0)';
+                }
+                resolve();
+            }, 1000/progressSpeed);
         } else {
             setTimeout(() => {resolve();}, 1000/progressSpeed);
         }
@@ -1389,10 +1404,13 @@ function formatMoveSpeed() {
     return moveSpeed>1 ? `${moveSpeed.toFixed(2)} km/h` : `${(moveSpeed*1e3).toFixed(1)} m/h`
 }
 
-function formatTime(seconds) {
-    if (seconds>36000) return `${Math.floor(seconds / 3600)}h${String(Math.floor((seconds/60) % 60)).padStart(2, '0')}m`
-    if (seconds>600) return `${Math.floor(seconds / 60)}m${String(Math.floor(seconds % 60)).padStart(2, '0')}s`
-    if (seconds>10) return `${Math.floor(seconds)}.${String(Math.floor((seconds * 100)%100)).padStart(2, '0')}s`
+function formatTime(seconds, short=true) {
+    const s = !short, j = clang===1;
+    const D = s ? "d" : j ? "日" : "days ", H = s ? "h" : j ? "時間" : "hr ", M = s ? "m" : j ? "分" : "min ", S = s ? "s" : j ? "秒" : "sec";
+    if (seconds>864e3) return `${Math.floor(seconds / 86400)}${D}${String(Math.floor((seconds % 86400) / 3600)).padStart(2, '0')}${H}`
+    if (seconds>36e3) return `${Math.floor(seconds / 3600)}${H}${String(Math.floor((seconds/60) % 60)).padStart(2, '0')}${M}`
+    if (seconds>600) return `${Math.floor(seconds / 60)}${M}${String(Math.floor(seconds % 60)).padStart(2, '0')}${S}`
+    if (seconds>10) return `${Math.floor(seconds)}.${String(Math.floor((seconds * 100)%100)).padStart(2, '0')}${S}`
     return `${Math.floor(seconds*1000)}ms`
 
 }
@@ -1435,7 +1453,10 @@ function triggerGameOver(explodedCell) {
     isGameOver = true;
     clearInterval(timerInterval);
     score = Math.round(score);
-    commitScoreAsXp();
+    const result = commitScoreAsXp();
+    if (result.leveledUp) {
+        showLevelUpNotification(result.endLevel);
+    }
     updateStatsDisplay();
 
     if (explodedCell) {

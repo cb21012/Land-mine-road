@@ -652,7 +652,6 @@ body {
 
     .badge-checkpoint {
         bottom: 2rem;
-        left: -3.6rem;
     }
 }
 
@@ -667,8 +666,8 @@ body {
 
 .bgm-notification {
     position: fixed;
-    bottom: 12px;
-    left: 12px;
+    bottom: 3rem;
+    left: .75rem;
     z-index: 40;
     max-width: calc(100vw - 24px);
     padding: .5rem .75rem;
