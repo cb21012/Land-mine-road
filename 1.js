@@ -77,25 +77,31 @@ function generateRandomName() {
             "Cynical", "Funny", "Foolish", "Ergonomic", "Introvert", "Extrovert", "Omnivert", "Original", "Replicated", "Perfect",
             "Immortal", "Epic", "Delusional", "Apeirophobic", "Random", "Suspicious", "Common", "Ancestral", "Geometric", "Cooked",
             "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless", "Golden", "Inexistent", "Japanese-made",
-            "Lazy", "Intimidating", "Yandere", "A bucket of", "M0R1", "M6R5", "Compiled"
+            "Lazy", "Intimidating", "Yandere", "A bucket of", "M0R1", "M6R5", "Compiled", "Clueless", "Sound-speed", "Sfw", 
+            "Bugged", "Unclear", "Attic", "Vengeful", "Endangered"
         ] : [
-            "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的", "外向的", "内向的", "独創的", "複製体", "完全な",
+            "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的な", "外向的な", "内向的な", "独創的な", "複製体", "完全な",
             "不滅の", "すごい", "妄想の", "無限恐怖症の", "どこかの", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
             "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない", "金の", "存在しない", "日本産の",
-            "怠けた", "威圧的な", "ヤンデレ", "バケツ1杯の", "無凸餅の", "完凸", "コンパイルされた"
+            "怠けた", "威圧的な", "ヤンデレな", "バケツ1杯の", "無凸餅の", "完凸", "コンパイルされた", "何も知らない", "音速の", "健全な",
+            "バグった", "滑舌の悪い", "屋根裏の", "復讐心に燃える", "絶滅危惧種の"
         ];
     const key2 = !j? [
             "Steve", "Alex", "Michael", "Mary", "John", "Sato", "Tanaka", "Suzuki", "Takahashi", "Ito",
-            "Marmot", "Cat", "Dog", "Shark", "Hornet", "Hydrogen", "Sodium", "Xenon", "Zinc", "Plutonium",
+            "Marmot", "Cat", "Dog", "Shark", "Hornet", "Arthropods", "Polar bear", "Pig", "Goat", "Cockroach", 
+            "Hydrogen", "Sodium", "Xenon", "Zinc", "Plutonium", "Trans fatty acids", "Hydrochloric acid", "TNT", "Glucose",
             "Imposter", "Mirage", "Apple", "Landmine", "Fried rice", "Tomato", "Potato", "Lemon", "Tofu", "Almond",
             "Pull request", "Vibe coding", "JavaScript", "php", "Python", "Linux", "Commit", "Conflict", "404 Error", "User Interface",
-            "Doomscroller", "Dopamine brat", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Gunma Empire"
+            "Appraiser", "Traveler", "Rover", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Idiot", "Barbarian",
+            "Parallel isotope", "Dopamine brat", "Gunma Empire", 
         ] : [
             "スティーブ", "アレックス", "マイケル", "メアリー", "ジョン", "サトウ", "スズキ", "タナカ", "タカハシ", "イトウ", 
-            "マーモット", "猫", "犬", "サメ", "雀蜂", "水素", "ナトリウム", "キセノン", "亜鉛", "プルトニウム",
+            "マーモット", "猫", "犬", "サメ", "雀蜂", "節足動物", "ホッキョクグマ", "豚", "山羊", "ゴキブリ", 
+            "水素", "ナトリウム", "キセノン", "亜鉛", "プルトニウム", "トランス脂肪酸", "塩化水素", "トリニトロトルエン", "ぶどう糖",
             "詐欺師", "蜃気楼", "林檎", "地雷", "炒飯", "トマト", "ポテト", "檸檬", "豆腐", "アーモンド",
             "プルリクエスト", "バイブコーディング", "JavaScript", "php", "Python", "Linux", "コミット", "コンフリクト", "404エラー", "ユーザーインターフェース",
-            "ドゥームスクローラー", "ドパガキ", "Cb", "勇者", "イリュージョナー", "破壊工作員", "天使", "グンマー帝国"
+            "鑑定士", "旅人", "漂泊者", "勇者", "Cb", "イリュージョナー", "破壊工作員", "天使", "大馬鹿者", "野蛮人",
+            "並行同位体", "グンマー帝国", "ドパガキ", 
         ];
     let result = '';
     result += key1[Math.floor(Math.random() * key1.length)];
@@ -116,10 +122,14 @@ function loadPlayerName() {
 let playerName = loadPlayerName();
 
 function savePlayerName(value) {
-    const normalizedName = value.trim().slice(0, 20);
+    const normalizedName = value.trim().slice(0, 32);
     playerName = normalizedName || generateRandomName();
     localStorage.setItem('Lmr_playerName', playerName);
     $('player-name').value = playerName;
+}
+
+function randomizePlayerName() {
+    savePlayerName(generateRandomName());
 }
 
 function loadGameStat(key) {
@@ -898,7 +908,6 @@ function updateTexts() {
     $("settings-open-btn").setAttribute("aria-label", ja ? "設定" : "Settings");
     $("player-name-label").textContent = ja ? "名前" : "Name";
     $("player-name").value = playerName;
-    $("player-name").setAttribute("aria-label", ja ? "名前（20文字まで）" : "Name (up to 20 characters)");
     $("stats-button-label").textContent = ja ? "統計" : "Statistics";
     $("stats-open-btn").setAttribute("aria-label", ja ? "統計" : "Statistics");
     $("stats-title").textContent = ja ? "統計" : "Statistics";

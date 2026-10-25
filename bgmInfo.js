@@ -22,6 +22,8 @@ window.bgmInfos = {
     20: {name: "bgm20", title: "ながれぼし(Track 2)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     //仮
     1001: {name: "bgm-1", title: "Piano31", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.65},
+    1002: {name: "bgm-2", title: "Winter", author: "MAOU", license: "CC BY 4.0", volume: 1.2},
+    1003: {name: "bgm-3", title: "Dreamy Aspiration(夢見る憧憬)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     1004: {name: "bgm-4", title: "Rain (雨雫)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     1005: {name: "bgm-5", title: "Rain Sound (アマオト)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     1007: {name: "bgm-7", title: "Acoustic50", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.57},
@@ -29,8 +31,8 @@ window.bgmInfos = {
     1009: {name: "bgm-9", title: "Acoustic31", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
     1010: {name: "bgm-a", title: "Exploration Theme", author: "CleytonKauffman", license: "CC0", volume: 1.65},
     1011: {name: "bgm-b", title: "The Field Of Dreams", author: "pauliuw", license: "CC0", volume: 1.8},
-    1013: {name: "bgm-d", title: "Tower of Great Lords", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
     1014: {name: "bgm-e", title: "Frosylva", author: "Peritune", license: "CC BY 4.0", volume: 0.65},
+    1015: {name: "bgm-f", title: "Battle in the Stratosphereq", author: "Scott Elliott", license: "CC BY 3.0", volume: 1},
 }
 
 window.authorUrls = {

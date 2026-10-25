@@ -113,7 +113,12 @@
                 </div>
                 <div class="settings-row">
                     <label class="settings-label" id="player-name-label" for="player-name">Name</label>
-                    <input type="text" id="player-name" class="settings-text-input" maxlength="20" autocomplete="nickname" onchange="savePlayerName(this.value)">
+                    <div class="player-name-control">
+                        <input type="text" id="player-name" class="settings-text-input" maxlength="32" onchange="savePlayerName(this.value)">
+                        <button type="button" id="player-name-random-btn" class="rand-btn" onclick="randomizePlayerName()">
+                            <i class="fa-solid fa-dice"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="settings-row">
                     <label class="settings-label" id="difficulty-label" for="difficulty-select">Difficulty</label>
