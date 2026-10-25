@@ -450,8 +450,8 @@ async function copyPlayerStats() {
     const ja = clang === 1;
     const xpProgress = nextXp > 0 ? (xp / nextXp * 100).toFixed(2) : '0.00';
     const shareText = ja
-        ? `${playerName}\nレベル: ${level}\nXP: ${xpProgress}%\n地区: ${getMaxUnlockedDistrict()}`
-        : `${playerName}\nLevel: ${level}\nXP: ${xpProgress}%\nDistrict: ${getMaxUnlockedDistrict()}`;
+        ? `${playerName} Lvl. ${level}(${xpProgress}%) は${getMaxUnlockedDistrict()}区まで到達した! -> Landmine road : https://land-mine-road.vercel.app/`
+        : `${playerName} Lvl. ${level}(${xpProgress}%) reached district ${getMaxUnlockedDistrict()}! -> Landmine road : https://land-mine-road.vercel.app/`;
 
     status.textContent = '';
     try {
