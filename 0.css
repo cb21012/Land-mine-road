@@ -259,7 +259,15 @@ body {
     transition: all .15s ease;
 }
 
-.restart-btn {position: fixed; top: 5rem; right: 8px;}
+.restart-btn {
+    position: fixed; 
+    top: 4rem; 
+    right: .75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    justify-content: center;
+    padding: .375rem;
+}
 
 .settings-open-btn {
     position: fixed;

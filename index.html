@@ -14,13 +14,9 @@
         <div class="district-background-layer" data-background-layer></div>
     </div>
 
-    <button id="settings-open-btn" class="settings-open-btn" onclick="openSettingsModal()" aria-label="Settings">
-        <i class="fa-solid fa-gear" aria-hidden="true"></i><span id="settings-button-label">Settings</span>
-    </button>
-    <button id="stats-open-btn" class="stats-open-btn" onclick="openStatsModal()" aria-label="Statistics">
-        <i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span id="stats-button-label">Statistics</span>
-    </button>
-    <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> <span id="restart-btn">Restart</span></button>
+    <button id="settings-open-btn" class="settings-open-btn" onclick="openSettingsModal()"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
+    <button id="stats-open-btn" class="stats-open-btn" onclick="openStatsModal()"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></button>
+    <button onclick="resetGame()" class="restart-btn"><i class="fa-solid fa-rotate-right"></i></button>
     <div class="start-checkpoint-control" id="start-checkpoint-control" hidden>
         <select id="start-district" onchange="changeStartDistrict(this.value)" aria-label="Start district"><option value="1">District 1</option></select>
         <select id="start-checkpoint" onchange="changeStartCheckpoint(this.value)" aria-label="Start distance"><option value="0">0m</option></select>

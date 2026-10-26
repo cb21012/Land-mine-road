@@ -886,7 +886,6 @@ function applyBackgroundVisibility() {
 function updateTexts() {
     const ja = clang===1;
     $("flag-mode-text").textContent = ja ? isFlagModeMobile ? "旗" : "掘削" : isFlagModeMobile ? "Mode : Flag" : "Mode : Dig";
-    $("restart-btn").textContent = ja ? "最初から" : "Restart";
     $("district-stats-bar").innerHTML = 
         ja ? `<b id="district-count" class="stat-value district-value">${district}</b> 区<br>地雷率 : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>` 
         : `District  <b id="district-count" class="stat-value district-value">${district}</b><br>Mine rate : <b id="mine-rate" class="stat-value mine-rate-value">${(mineRate*100).toFixed(2)}%</b>`;
@@ -904,12 +903,8 @@ function updateTexts() {
     $("retry-btn").textContent = ja ? "再試行" : "Try again";
     $("lang-btn").textContent = ja ? "Ja" : "En";
     $("settings-title").textContent = ja ? "設定" : "Settings";
-    $("settings-button-label").textContent = ja ? "設定" : "Settings";
-    $("settings-open-btn").setAttribute("aria-label", ja ? "設定" : "Settings");
     $("player-name-label").textContent = ja ? "名前" : "Name";
     $("player-name").value = playerName;
-    $("stats-button-label").textContent = ja ? "統計" : "Statistics";
-    $("stats-open-btn").setAttribute("aria-label", ja ? "統計" : "Statistics");
     $("stats-title").textContent = ja ? "統計" : "Statistics";
     $("stats-copy-btn-label").textContent = ja ? "シェア情報をコピー" : "Copy share info";
     $("stats-copy-status").textContent = "";
