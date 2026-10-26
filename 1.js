@@ -360,7 +360,7 @@ function getBgmTargetVolume(trackName) {
     // bgmInfosからトラックのvolumeを取得して設定値と掛け合わせる
     const info = getBgmInfoByName(trackName || currentBgmTrack);
     const trackVol = info ? info.volume : 1.0;
-    return Math.min(1, (bgmVolume / 100) * 0.5 * trackVol);
+    return Math.min(4, (bgmVolume / 100) * 0.5 * trackVol);
 }
 
 function getBgmInfoByName(name) {
