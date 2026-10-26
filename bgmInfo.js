@@ -13,7 +13,7 @@ window.bgmInfos = {
     11: {name: "bgm11", title: "Delusion", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.3},
     12: {name: "bgm12", title: "旅立ち", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.85},
     13: {name: "bgm13", title: "Foreboding", author: "Peritune", license: "CC BY 4.0", volume: 0.7},
-    14: {name: "bgm14", title: "World Map", author: "Scott Elliott", license: "CC BY 3.0", volume: 1.3},
+    14: {name: "bgm14", title: "World Map", author: "Scott Elliott", license: "CC BY 4.0", volume: 1.3},
     15: {name: "bgm15", title: "Mystery Manor", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1},
     16: {name: "bgm16", title: "The City Breathes Your Name", author: "Peritune", license: "Peritune", volume: 0.58},
     17: {name: "bgm17", title: "Cold wind", author: "MAOU", license: "CC BY 4.0", volume: 1.2},
@@ -32,7 +32,11 @@ window.bgmInfos = {
     1010: {name: "bgm-a", title: "Exploration Theme", author: "CleytonKauffman", license: "CC0", volume: 1.65},
     1011: {name: "bgm-b", title: "The Field Of Dreams", author: "pauliuw", license: "CC0", volume: 1.8},
     1014: {name: "bgm-e", title: "Frosylva", author: "Peritune", license: "CC BY 4.0", volume: 0.65},
-    1015: {name: "bgm-f", title: "Battle in the Stratosphereq", author: "Scott Elliott", license: "CC BY 3.0", volume: 1},
+    1015: {name: "bgm-f", title: "Battle in the Stratosphereq", author: "Scott Elliott", license: "CC BY 4.0", volume: 1},
+    1016: {name: "bgm-g", title: "Ghost's band", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1},
+    1017: {name: "bgm-h", title: "Journey to the East Rocks", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
+    1018: {name: "bgm-i", title: "Peaceful Place", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
+    1019: {name: "bgm-j", title: "Without", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
 }
 
 window.authorUrls = {

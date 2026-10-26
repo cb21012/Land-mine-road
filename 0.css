@@ -67,25 +67,25 @@ body {
 .num-8 {color: #f00;}
 
 .cell-unopened {
-    background: linear-gradient(145deg, #334155, #1e293b);
+    background: linear-gradient(145deg, #345c, #223c);
     box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.15), 2px 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .cell-unopened.dz {
-    background: linear-gradient(145deg, #553333, #3b1e1e) !important;
+    background: linear-gradient(145deg, #533c, #322c) !important;
     box-shadow: inset 1px 1px 1px rgba(255, 200, 200, 0.15), 2px 2px 4px rgba(40, 0, 0, 0.4) !important;
 }
 
 .cell-unopened:hover {
-    background: linear-gradient(145deg, #475569, #334155);
+    background: linear-gradient(145deg, #456d, #345d);
 }
 
 .cell-unopened.dz:hover {
-    background: linear-gradient(145deg, #7a5650, #64473c) !important;
+    background: linear-gradient(145deg, #755c, #644c) !important;
 }
 
 .cell-opened {
-    background-color: #0f172a;
+    background-color: #4446;
     box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.6);
     position: relative;
 }

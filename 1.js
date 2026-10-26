@@ -42,8 +42,12 @@ let mhp = 160, hp = 160, regen = 1.00;
 // BGM Audio Controller
 let currentBgmAudio = null;
 let currentBgmTrack = null; // 'bgm1' or 'bgm_dz'
+let pendingBgmTrack = null;
 let bgmFadeInterval = null;
 const activeBgmAudios = new Set();
+let audioContext = null;
+let bgmSwitchId = 0;
+const audioBufferCache = new Map();
 let nowPlayingUpdateInterval = null;
 let nowPlayingStateKey = null;
 
@@ -278,9 +282,63 @@ function showLevelUpNotification(newLevel) {
     notification.classList.remove('is-showing');
     void notification.offsetWidth;
     notification.classList.add('is-showing');
-    const audio = new Audio('sebgm/lu.mp3');
-    audio.volume = seVolume / 100;
-    audio.play();
+    playSoundEffect('sebgm/lu.mp3');
+}
+
+function getAudioContext() {
+    if (!audioContext) {
+        const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextConstructor) {
+            throw new Error('Web Audio API is not supported by this browser.');
+        }
+        audioContext = new AudioContextConstructor();
+    }
+    return audioContext;
+}
+
+async function getAudioBuffer(filePath) {
+    let bufferPromise = audioBufferCache.get(filePath);
+    if (!bufferPromise) {
+        bufferPromise = fetch(filePath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load audio: ${filePath} (${response.status})`);
+                }
+                return response.arrayBuffer();
+            })
+            .then(data => getAudioContext().decodeAudioData(data));
+        audioBufferCache.set(filePath, bufferPromise);
+    }
+
+    try {
+        return await bufferPromise;
+    } catch (error) {
+        if (audioBufferCache.get(filePath) === bufferPromise) {
+            audioBufferCache.delete(filePath);
+        }
+        throw error;
+    }
+}
+
+async function playSoundEffect(filePath) {
+    try {
+        const context = getAudioContext();
+        await context.resume();
+        const buffer = await getAudioBuffer(filePath);
+        const source = context.createBufferSource();
+        const gain = context.createGain();
+        source.buffer = buffer;
+        gain.gain.value = seVolume / 100;
+        source.connect(gain);
+        gain.connect(context.destination);
+        source.addEventListener('ended', () => {
+            source.disconnect();
+            gain.disconnect();
+        }, {once: true});
+        source.start();
+    } catch (error) {
+        console.error(`Unable to play sound effect "${filePath}".`, error);
+    }
 }
 
 function updatePlayerDisplay() {
@@ -551,7 +609,12 @@ function startOrUpdateBgm() {
     if (isGameOver) return;
     district = Math.floor(distance / AREA_LENGTH) +1;
     const track = getExpectedBgmTrack(distance);
+    if (pendingBgmTrack === track) return;
     if (currentBgmTrack === track && currentBgmAudio) {
+        if (pendingBgmTrack) {
+            bgmSwitchId++;
+            pendingBgmTrack = null;
+        }
         return;
     }
     switchBgm(track);
@@ -562,69 +625,79 @@ function switchBgm(newTrack) {
         clearInterval(bgmFadeInterval);
         bgmFadeInterval = null;
     }
+    const switchId = ++bgmSwitchId;
 
     for (const audio of activeBgmAudios) {
         if (audio !== currentBgmAudio) {
-            audio.pause();
-            audio.volume = 0;
+            stopBgmAudio(audio);
             activeBgmAudios.delete(audio);
         }
     }
 
-    const oldAudio = currentBgmAudio;
-    currentBgmTrack = newTrack;
-
+    pendingBgmTrack = newTrack;
     const info = getBgmInfoByName(newTrack);
     showBgmNotification(newTrack);
     const filePath = `sebgm/${info ? info.name : newTrack}.ogg`;
-    const newAudio = new Audio(filePath);
-    newAudio.loop = true;
-    newAudio.volume = 0;
-    currentBgmAudio = newAudio;
-    activeBgmAudios.add(newAudio);
+    void startBgmPlayback(newTrack, filePath, switchId);
+}
 
-    updateNowPlayingBgm();
-    newAudio.addEventListener('playing', updateNowPlayingBgm);
-    const playPromise = newAudio.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(() => {
-            updateNowPlayingBgm();
-        });
-    }
+async function startBgmPlayback(track, filePath, switchId) {
+    try {
+        const context = getAudioContext();
+        await context.resume();
+        const buffer = await getAudioBuffer(filePath);
+        if (switchId !== bgmSwitchId || isGameOver) return;
 
-    const fadeOutDuration = 1000;
-    const fadeInDuration = 1000;
-    const stepInterval = 40;
-    const fadeOutSteps = fadeOutDuration / stepInterval;
-    const fadeInSteps = fadeInDuration / stepInterval;
+        const oldAudio = currentBgmAudio;
+        const source = context.createBufferSource();
+        const gain = context.createGain();
+        const newAudio = {source, gain, track, buffer, startedAt: context.currentTime};
+        source.buffer = buffer;
+        source.loop = true;
+        gain.gain.value = 0;
+        source.connect(gain);
+        gain.connect(context.destination);
+        source.addEventListener('ended', () => {
+            activeBgmAudios.delete(newAudio);
+            source.disconnect();
+            gain.disconnect();
+        }, {once: true});
+        source.start();
+        currentBgmAudio = newAudio;
+        currentBgmTrack = track;
+        pendingBgmTrack = null;
+        activeBgmAudios.add(newAudio);
+        updateNowPlayingBgm();
 
-    let step = 0;
-    const startOldVol = oldAudio ? oldAudio.volume : 0;
+        const duration = 1000;
+        const stepInterval = 40;
+        const totalSteps = duration / stepInterval;
+        let step = 0;
+        const oldVolume = oldAudio ? oldAudio.gain.gain.value : 0;
 
-    bgmFadeInterval = setInterval(() => {
-        step++;
-        if (oldAudio && step <= fadeOutSteps) {
-            const ratio = 1 - (step / fadeOutSteps);
-            oldAudio.volume = Math.max(0, startOldVol * ratio);
-            if (step === fadeOutSteps) {
-                oldAudio.pause();
-                activeBgmAudios.delete(oldAudio);
+        bgmFadeInterval = setInterval(() => {
+            step++;
+            const progress = Math.min(1, step / totalSteps);
+            if (oldAudio) {
+                oldAudio.gain.gain.value = oldVolume * (1 - progress);
+                if (step >= totalSteps) {
+                    stopBgmAudio(oldAudio);
+                }
             }
-        }
-
-        if (step >= fadeOutSteps) {
-            const inStep = step - fadeOutSteps;
-            const target = getBgmTargetVolume(newTrack);
-            const ratio = Math.min(1, inStep / fadeInSteps);
-            newAudio.volume = Math.min(1, target * ratio);
-
-            if (inStep >= fadeInSteps) {
-                newAudio.volume = target;
+            gain.gain.value = getBgmTargetVolume(track) * progress;
+            if (step >= totalSteps) {
                 clearInterval(bgmFadeInterval);
                 bgmFadeInterval = null;
             }
-        }
-    }, stepInterval);
+        }, stepInterval);
+    } catch (error) {
+        if (switchId === bgmSwitchId) pendingBgmTrack = null;
+        console.error(`Unable to play background music "${track}".`, error);
+    }
+}
+
+function stopBgmAudio(audio) {
+    audio.source.stop();
 }
 
 function stopBgmGameOver() {
@@ -632,17 +705,18 @@ function stopBgmGameOver() {
         clearInterval(bgmFadeInterval);
         bgmFadeInterval = null;
     }
+    bgmSwitchId++;
+    pendingBgmTrack = null;
     if (!currentBgmAudio) return;
 
     const audioToStop = currentBgmAudio;
     for (const audio of activeBgmAudios) {
         if (audio !== audioToStop) {
-            audio.pause();
-            audio.volume = 0;
+            stopBgmAudio(audio);
             activeBgmAudios.delete(audio);
         }
     }
-    const initialVol = audioToStop.volume;
+    const initialVol = audioToStop.gain.gain.value;
     const duration = 1000;
     const stepInterval = 40;
     const totalSteps = duration / stepInterval;
@@ -651,10 +725,9 @@ function stopBgmGameOver() {
     bgmFadeInterval = setInterval(() => {
         step++;
         const ratio = 1 - (step / totalSteps);
-        audioToStop.volume = Math.max(0, initialVol * ratio);
+        audioToStop.gain.gain.value = Math.max(0, initialVol * ratio);
         if (step >= totalSteps) {
-            audioToStop.pause();
-            audioToStop.volume = 0;
+            stopBgmAudio(audioToStop);
             activeBgmAudios.delete(audioToStop);
             clearInterval(bgmFadeInterval);
             bgmFadeInterval = null;
@@ -672,9 +745,10 @@ function stopBgmImmediately() {
         clearInterval(bgmFadeInterval);
         bgmFadeInterval = null;
     }
+    bgmSwitchId++;
+    pendingBgmTrack = null;
     for (const audio of activeBgmAudios) {
-        audio.pause();
-        audio.volume = 0;
+        stopBgmAudio(audio);
     }
     activeBgmAudios.clear();
     currentBgmAudio = null;
@@ -719,7 +793,7 @@ function updateNowPlayingBgm() {
     const audio = currentBgmAudio;
     if (!section) return;
 
-    const isPlaying = audio && !audio.paused && bgmVolume > 0;
+    const isPlaying = audio && audioContext.state === 'running' && bgmVolume > 0;
     const stateKey = `${isPlaying ? currentBgmTrack : 'None'}:${clang}`;
     if (stateKey === nowPlayingStateKey) return;
     nowPlayingStateKey = stateKey;
@@ -785,23 +859,24 @@ function updateNowPlayingTime() {
     if (!time) return;
 
     const audio = currentBgmAudio;
-    const isPlaying = audio && !audio.paused && bgmVolume > 0;
+    const isPlaying = audio && audioContext.state === 'running' && bgmVolume > 0;
     const hasTrackInfo = window.bgmInfos &&
         Object.values(window.bgmInfos).some(info => info.name === currentBgmTrack);
     const hasValidDuration = isPlaying && hasTrackInfo &&
-        Number.isFinite(audio.currentTime) && Number.isFinite(audio.duration) && audio.duration > 0;
+        Number.isFinite(audio.buffer.duration) && audio.buffer.duration > 0;
     if (!hasValidDuration) {
         time.textContent = '---';
         if (progress) progress.value = 0;
         return;
     }
 
-    const currentTime = Math.min(audio.currentTime, audio.duration);
-    time.textContent = `${formatTime(currentTime)} / ${formatTime(audio.duration)}`;
+    const duration = audio.buffer.duration;
+    const currentTime = (audioContext.currentTime - audio.startedAt) % duration;
+    time.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
     if (progress) {
-        progress.max = audio.duration;
+        progress.max = duration;
         progress.value = currentTime;
-        progress.setAttribute('aria-valuetext', `${formatTime(currentTime)} / ${formatTime(audio.duration)}`);
+        progress.setAttribute('aria-valuetext', `${formatTime(currentTime)} / ${formatTime(duration)}`);
     }
 }
 
@@ -1002,14 +1077,12 @@ function updateBgmVolume(val) {
     const text = $('bgm-volume-text');
     if (text) text.innerText = `${bgmVolume}%`;
     if (currentBgmAudio && !bgmFadeInterval) {
-        currentBgmAudio.volume = getBgmTargetVolume(currentBgmTrack);
+        currentBgmAudio.gain.gain.value = getBgmTargetVolume(currentBgmTrack);
     }
 }
 
 function playMineSe() {
-    const audio = new Audio("sebgm/lm.mp3");
-    audio.volume = seVolume / 100;
-    audio.play();
+    playSoundEffect('sebgm/lm.mp3');
 }
 
 function resetGame() {
