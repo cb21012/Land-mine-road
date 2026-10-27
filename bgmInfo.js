@@ -2,13 +2,13 @@ window.bgmInfos = {
     0: {name: "bgm_dz", title: "Rituale Machina", author: "Peritune", license: "Peritune", volume: 0.52},
     1: {name: "bgm1", title: "Acoustic36", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
     2: {name: "bgm2", title: "Dual Illusions", author: "Peritune", license: "CC BY 4.0", volume: 0.6},
-    3: {name: "bgm3", title: "Betters days are Coming (Lo-Fi Ver.)", author: "Cleyton Kauffman", license: "CC0", volume: 1.6},
+    3: {name: "bgm3", title: "Betters days are Coming (Lo-Fi Ver.)", author: "Cleyton Kauffman", license: "CC 0", volume: 1.6},
     4: {name: "bgm4", title: "Rainwalk", author: "Peritune", license: "Peritune", volume: 0.7},
     5: {name: "bgm5", title: "Acoustic30", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.6},
     6: {name: "bgm6", title: "Snowy Day 3", author: "Peritune", license: "CC BY 4.0", volume: 0.6},
     7: {name: "bgm7", title: "Snow sky (雪空)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     8: {name: "bgm8", title: "Healing3", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
-    9: {name: "bgm9", title: "Underwater", author: "Cleyton Kauffman", license: "CC0", volume: 1.2},
+    9: {name: "bgm9", title: "Underwater", author: "Cleyton Kauffman", license: "CC 0", volume: 1.2},
     10: {name: "bgm10", title: "Water Wells in Your Head", author: "DONG", license: "CC BY 4.0", volume: 0.9},
     11: {name: "bgm11", title: "Delusion", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.3},
     12: {name: "bgm12", title: "旅立ち", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.85},
@@ -19,25 +19,30 @@ window.bgmInfos = {
     17: {name: "bgm17", title: "Cold wind", author: "MAOU", license: "CC BY 4.0", volume: 1.2},
     18: {name: "bgm18", title: "Tower of Great Lords", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
     19: {name: "bgm19", title: "Autumn", author: "MAOU", license: "CC BY 4.0", volume: 1.2},
-    20: {name: "bgm20", title: "ながれぼし(Track 2)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
+    20: {name: "bgm20", title: "Dreamy Aspiration (夢見る憧憬)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
+    21: {name: "bgm21", title: "Acoustic50", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.57},
+    22: {name: "bgm22", title: "Frosylva", author: "Peritune", license: "CC BY 4.0", volume: 0.65},
+    23: {name: "bgm23", title: "The Field Of Dreams", author: "pauliuw", license: "CC 0", volume: 1.8},
+    
     //仮
     1001: {name: "bgm-1", title: "Piano31", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.65},
-    1002: {name: "bgm-2", title: "Winter", author: "MAOU", license: "CC BY 4.0", volume: 1.2},
-    1003: {name: "bgm-3", title: "Dreamy Aspiration (夢見る憧憬)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
+    1002: {name: "bgm-2", title: "Winter", author: "MAOU", license: "CC BY 4.0", volume: 1.3},
+    1003: {name: "bgm-3", title: "ながれぼし(Track 2)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     1004: {name: "bgm-4", title: "Rain (雨雫)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
     1005: {name: "bgm-5", title: "Rain Sound (アマオト)", author: "Moppy sound (もっぴーさうんど)", license: "OpenTracks", volume: 0.75},
-    1007: {name: "bgm-7", title: "Acoustic50", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.57},
-    1008: {name: "bgm-8", title: "Acoustic48", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
-    1009: {name: "bgm-9", title: "Acoustic31", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
-    1010: {name: "bgm-a", title: "Exploration Theme", author: "Cleyton Kauffman", license: "CC0", volume: 1.65},
-    1011: {name: "bgm-b", title: "The Field Of Dreams", author: "pauliuw", license: "CC0", volume: 1.8},
-    1014: {name: "bgm-e", title: "Frosylva", author: "Peritune", license: "CC BY 4.0", volume: 0.65},
-    1015: {name: "bgm-f", title: "Battle in the Stratosphereq", author: "Scott Elliott", license: "CC BY 4.0", volume: 1},
-    1016: {name: "bgm-g", title: "Ghost's band", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1},
-    1017: {name: "bgm-h", title: "Journey to the East Rocks", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
-    1018: {name: "bgm-i", title: "Peaceful Place", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
-    1019: {name: "bgm-j", title: "Without", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
-}
+    1006: {name: "bgm-8", title: "Acoustic48", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
+    1007: {name: "bgm-9", title: "Acoustic31", author: "Maou Damashii (魔王魂)", license: "CC BY 4.0", volume: 0.55},
+    1008: {name: "bgm-a", title: "Exploration Theme", author: "Cleyton Kauffman", license: "CC 0", volume: 1.65},
+    1009: {name: "bgm-f", title: "Battle in the Stratosphereq", author: "Scott Elliott", license: "CC BY 4.0", volume: 1},
+    1010: {name: "bgm-g", title: "Ghost's band", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1},
+    1011: {name: "bgm-h", title: "Journey to the East Rocks", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.75},
+    1012: {name: "bgm-i", title: "Peaceful Place", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.25},
+    1013: {name: "bgm-j", title: "Without", author: "Alexandr Zhelanov", license: "CC BY 3.0", volume: 1.2},
+    1014: {name: "bgm-k", title: "First Light Particles", author: "Yoiyami", license: "CC 0", volume: 1.1},
+    1015: {name: "bgm-l", title: "Starfield Romance", author: "Yoiyami", license: "CC 0", volume: 0.9},
+    1016: {name: "bgm-m", title: "The Budding of Consciousness", author: "Yoiyami", license: "CC 0", volume: 1},
+    1017: {name: "bgm-n", title: "Yoiyami Core Theme", author: "Yoiyami", license: "CC 0", volume: 1},
+};
 
 window.authorUrls = {
     "Peritune": "https://peritune.com/",
@@ -51,12 +56,12 @@ window.authorUrls = {
     "Scott Elliott": "https://opengameart.org/users/scrabbit",
     "rubberduck": "https://opengameart.org/users/rubberduck",
     "WobbleBoxx Workshop": "https://opengameart.org/users/wobbleboxx",
-}
+};
 
 window.licenseUrls = {
-    "CC0": {"en": "https://creativecommons.org/publicdomain/zero/1.0/deed.en", "ja": "https://creativecommons.org/publicdomain/zero/1.0/deed.ja"},
+    "CC 0": {"en": "https://creativecommons.org/publicdomain/zero/1.0/deed.en", "ja": "https://creativecommons.org/publicdomain/zero/1.0/deed.ja"},
     "CC BY 4.0": {"en": "https://creativecommons.org/licenses/by/4.0/deed.en", "ja": "https://creativecommons.org/licenses/by/4.0/deed.ja"},
     "CC BY 3.0": {"en": "https://creativecommons.org/licenses/by/3.0/deed.en", "ja": "https://creativecommons.org/licenses/by/3.0/deed.ja"},
     "Peritune" : {"en": "https://peritune.com/about/", "ja": "https://peritune.com/about/"},
     "OpenTracks": {"en": "https://opentracks.com/en/help/articles/license/", "ja": "https://opentracks.com/help/articles/license/"}
-}
+};

@@ -82,13 +82,13 @@ function generateRandomName() {
             "Immortal", "Epic", "Delusional", "Apeirophobic", "Random", "Suspicious", "Common", "Ancestral", "Geometric", "Cooked",
             "Distorted", "Baloney", "Binary", "Censored", "Schrödinger's", "Bad", "Heartless", "Golden", "Inexistent", "Japanese-made",
             "Lazy", "Intimidating", "Yandere", "A bucket of", "M0R1", "M6R5", "Compiled", "Clueless", "Sound-speed", "Sfw", 
-            "Bugged", "Unclear", "Attic", "Vengeful", "Endangered"
+            "Bugged", "Unclear", "Attic", "Vengeful", "Endangered", "Rugged", "Wild"
         ] : [
-            "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的な", "外向的な", "内向的な", "独創的な", "複製体", "完全な",
+            "冷笑系", "面白い", "愚かな", "人間工学に基づいた", "内向的な", "外向的な", "両向的な", "独創的な", "複製体", "完全な",
             "不滅の", "すごい", "妄想の", "無限恐怖症の", "どこかの", "疑わしい", "ありふれた", "先祖代々の", "幾何学的な", "調理された", 
             "音割れ", "でたらめな", "バイナリ形式の", "検閲済みの", "シュレーディンガーの", "悪い", "心ない", "金の", "存在しない", "日本産の",
             "怠けた", "威圧的な", "ヤンデレな", "バケツ1杯の", "無凸餅の", "完凸", "コンパイルされた", "何も知らない", "音速の", "健全な",
-            "バグった", "滑舌の悪い", "屋根裏の", "復讐心に燃える", "絶滅危惧種の"
+            "バグった", "滑舌の悪い", "屋根裏の", "復讐心に燃える", "絶滅危惧種の", "無骨な", "野生の"
         ];
     const key2 = !j? [
             "Steve", "Alex", "Michael", "Mary", "John", "Sato", "Tanaka", "Suzuki", "Takahashi", "Ito",
@@ -97,7 +97,8 @@ function generateRandomName() {
             "Imposter", "Mirage", "Apple", "Landmine", "Fried rice", "Tomato", "Potato", "Lemon", "Tofu", "Almond",
             "Pull request", "Vibe coding", "JavaScript", "php", "Python", "Linux", "Commit", "Conflict", "404 Error", "User Interface",
             "Appraiser", "Traveler", "Rover", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Idiot", "Barbarian",
-            "Parallel isotope", "Dopamine brat", "Gunma Empire", 
+            "Parallel isotope", "Dopamine brat", "Gunma Empire", "SCP", "Debater", "Commander", "Logician", "Architect", "Advocate", "Mediator", 
+            "Protagonist", "Campaigner", "Logistician", "Defender", "Executive", "Consul", "Virtuoso", "Adventurer", "Entrepreneur", "Entertainer", 
         ] : [
             "スティーブ", "アレックス", "マイケル", "メアリー", "ジョン", "サトウ", "スズキ", "タナカ", "タカハシ", "イトウ", 
             "マーモット", "猫", "犬", "サメ", "雀蜂", "節足動物", "ホッキョクグマ", "豚", "山羊", "ゴキブリ", 
@@ -105,7 +106,8 @@ function generateRandomName() {
             "詐欺師", "蜃気楼", "林檎", "地雷", "炒飯", "トマト", "ポテト", "檸檬", "豆腐", "アーモンド",
             "プルリクエスト", "バイブコーディング", "JavaScript", "php", "Python", "Linux", "コミット", "コンフリクト", "404エラー", "ユーザーインターフェース",
             "鑑定士", "旅人", "漂泊者", "勇者", "Cb", "イリュージョナー", "破壊工作員", "天使", "大馬鹿者", "野蛮人",
-            "並行同位体", "グンマー帝国", "ドパガキ", 
+            "並行同位体", "ドパガキ", "グンマー帝国", "SCP", "討論者", "司令官", "論理学者", "建築家", "提唱者", "調停者", 
+            "主人公", "運動家", "管理人", "守護者", "上司", "領事", "巨匠", "冒険家", "起業家", "エンターテイナー"
         ];
     let result = '';
     result += key1[Math.floor(Math.random() * key1.length)];
@@ -180,6 +182,11 @@ function finalizeGameStats() {
     gameStats.totalDist += traveledDistance;
     gameStats.hiScore = Math.max(gameStats.hiScore, finalScore);
     gameStats.totalScore += finalScore;
+    for (const cell of boardMap.values()) {
+        if (!cell.isFlagged) continue;
+        gameStats.usedFlags++;
+        if (cell.isMine) gameStats.trueFlags++;
+    }
     isRunStatsCommitted = true;
     saveGameStats();
     renderStatsModal();
@@ -985,9 +992,9 @@ function updateTexts() {
     $("stats-copy-status").textContent = "";
     $("stat-total-time-label").textContent = ja ? "合計時間" : "Total time";
     $("stat-district-label").textContent = ja ? "地区" : "District";
-    $("stat-max-dist-label").textContent = ja ? "最遠距離" : "Max distance";
-    $("stat-hi-dist-label").textContent = ja ? "最長到達距離" : "Longest distance";
-    $("stat-total-dist-label").textContent = ja ? "合計距離" : "Total distance";
+    $("stat-max-dist-label").textContent = ja ? "最大到達距離" : "Max distance";
+    $("stat-hi-dist-label").textContent = ja ? "最長移動距離" : "Longest distance";
+    $("stat-total-dist-label").textContent = ja ? "合計移動距離" : "Total distance";
     $("stat-hi-score-label").textContent = ja ? "最高点" : "Highest score";
     $("stat-total-score-label").textContent = ja ? "合計点" : "Total score";
     $("stat-used-flags-label").textContent = ja ? "旗を刺した数" : "Used flags";
@@ -1042,7 +1049,7 @@ function initVolume() {
     const savedVol = localStorage.getItem('Lmr_seVol');
     if (savedVol !== null) {
         const parsed = parseInt(savedVol, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 200) {
             seVolume = parsed;
         }
     }
@@ -1054,7 +1061,7 @@ function initVolume() {
     const savedBgmVol = localStorage.getItem('Lmr_bgmVol');
     if (savedBgmVol !== null) {
         const parsedBgm = parseInt(savedBgmVol, 10);
-        if (!isNaN(parsedBgm) && parsedBgm >= 0 && parsedBgm <= 100) {
+        if (!isNaN(parsedBgm) && parsedBgm >= 0 && parsedBgm <= 200) {
             bgmVolume = parsedBgm;
         }
     }
