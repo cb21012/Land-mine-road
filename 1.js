@@ -57,6 +57,7 @@ const savedBackgroundMode = localStorage.getItem('Lmr_backgroundMode');
 let backgroundMode = ['high', 'low', 'hidden'].includes(savedBackgroundMode)
     ? savedBackgroundMode
     : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'high';
+let isFooterTextHidden = localStorage.getItem('Lmr_footerTextHidden') === 'true';
 let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
 let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
 let fixedBgmId = Number.parseInt(localStorage.getItem('Lmr_fixedBgmId') ?? '1', 10);
@@ -947,6 +948,19 @@ function setBackgroundMode(mode) {
     localStorage.setItem('Lmr_backgroundMode', backgroundMode);
 }
 
+function setFooterTextHidden(hidden) {
+    isFooterTextHidden = hidden;
+    localStorage.setItem('Lmr_footerTextHidden', String(hidden));
+    applyFooterTextVisibility();
+}
+
+function applyFooterTextVisibility() {
+    const footerText = $('footer-text');
+    const toggle = $('footer-text-hidden-toggle');
+    if (footerText) footerText.hidden = isFooterTextHidden;
+    if (toggle) toggle.checked = isFooterTextHidden;
+}
+
 function applyBackgroundVisibility() {
     const background = $('district-background');
     const select = $('background-mode');
@@ -1013,6 +1027,7 @@ function updateTexts() {
     $("background-hidden-option").textContent = ja ? "非表示" : "Hidden";
     $("background-mode").value = backgroundMode;
     $("bgm-fixed-label").textContent = ja ? "BGMを固定" : "Fix BGM";
+    $("footer-text-label").textContent = ja ? "フッターの説明を非表示" : "Hide footer text";
     $("bgm-list-open-label").textContent = ja ? "BGM一覧" : "BGM list";
     $("bgm-list-title").textContent = ja ? "BGM一覧" : "BGM list";
     $("credits-title").textContent = ja ? "クレジット" : "Credits";
@@ -1041,6 +1056,7 @@ function updateTexts() {
 window.onload = () => {
     initVolume();
     applyBackgroundVisibility();
+    applyFooterTextVisibility();
     updateBgmFixedControls();
     renderCredits();
     updateTexts();

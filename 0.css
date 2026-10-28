@@ -666,20 +666,20 @@ body {
         white-space: nowrap;
         transform: translateX(-100%);
         transform-origin: left center;
-        font-size: 1.5rem;
+        font-size: .75rem;
     }
 
     .badge-frontline {
-        bottom: 2.2rem;
+        bottom: 1rem;
     }
 
     .badge-checkline {
-        bottom: 2rem;
-        right: -3.6rem;
+        bottom: .9rem;
+        right: -2rem;
     }
 
     .badge-checkpoint {
-        bottom: 2rem;
+        bottom: .8rem;
     }
 }
 
