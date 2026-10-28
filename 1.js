@@ -52,11 +52,24 @@ let nowPlayingUpdateInterval = null;
 let nowPlayingStateKey = null;
 
 //Config
-let seVolume = 60, bgmVolume = 60, clang = Number(localStorage.getItem('Lmr_lang') ?? 0);
+const savedLang = localStorage.getItem('Lmr_lang');
+let clang = savedLang === null ? 1 : Number(savedLang);
+if (Number.isNaN(clang) || ![0, 1].includes(clang)) {
+    clang = 1;
+}
+if (savedLang === null) {
+    localStorage.setItem('Lmr_lang', String(clang));
+}
+
 const savedBackgroundMode = localStorage.getItem('Lmr_backgroundMode');
 let backgroundMode = ['high', 'low', 'hidden'].includes(savedBackgroundMode)
     ? savedBackgroundMode
-    : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'high';
+    : localStorage.getItem('Lmr_showBackground') === 'false' ? 'hidden' : 'low';
+if (savedBackgroundMode === null) {
+    localStorage.setItem('Lmr_backgroundMode', backgroundMode);
+}
+
+let seVolume = 60, bgmVolume = 60;
 let isFooterTextHidden = localStorage.getItem('Lmr_footerTextHidden') === 'true';
 let difficulty = localStorage.getItem('Lmr_diff') === '1' ? 1 : 0;
 let isBgmFixed = localStorage.getItem('Lmr_bgmFixed') === 'true';
