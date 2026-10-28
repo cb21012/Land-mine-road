@@ -99,6 +99,7 @@ function generateRandomName() {
             "Appraiser", "Traveler", "Rover", "Cb", "Hero", "Illusionist", "Saboteur", "Angel", "Idiot", "Barbarian",
             "Parallel isotope", "Dopamine brat", "Gunma Empire", "SCP", "Debater", "Commander", "Logician", "Architect", "Advocate", "Mediator", 
             "Protagonist", "Campaigner", "Logistician", "Defender", "Executive", "Consul", "Virtuoso", "Adventurer", "Entrepreneur", "Entertainer", 
+            "Proxy", "Trailblazer"
         ] : [
             "スティーブ", "アレックス", "マイケル", "メアリー", "ジョン", "サトウ", "スズキ", "タナカ", "タカハシ", "イトウ", 
             "マーモット", "猫", "犬", "サメ", "雀蜂", "節足動物", "ホッキョクグマ", "豚", "山羊", "ゴキブリ", 
@@ -107,7 +108,8 @@ function generateRandomName() {
             "プルリクエスト", "バイブコーディング", "JavaScript", "php", "Python", "Linux", "コミット", "コンフリクト", "404エラー", "ユーザーインターフェース",
             "鑑定士", "旅人", "漂泊者", "勇者", "Cb", "イリュージョナー", "破壊工作員", "天使", "大馬鹿者", "野蛮人",
             "並行同位体", "ドパガキ", "グンマー帝国", "SCP", "討論者", "司令官", "論理学者", "建築家", "提唱者", "調停者", 
-            "主人公", "運動家", "管理人", "守護者", "上司", "領事", "巨匠", "冒険家", "起業家", "エンターテイナー"
+            "主人公", "運動家", "管理人", "守護者", "上司", "領事", "巨匠", "冒険家", "起業家", "エンターテイナー",
+            "プロキシ", "開拓者"
         ];
     let result = '';
     result += key1[Math.floor(Math.random() * key1.length)];
@@ -195,7 +197,7 @@ function finalizeGameStats() {
 function updatePlayerStats() {
     getPlayerNextXp();
     mhp = Math.floor(0.015*level**2 + level + 160);
-    regen = level*.0167 + 1 + mhp/1000;
+    regen = level*.0167 + .84 + mhp/1000;
 }
 
 function calcLmDmgAfter16(d) {
@@ -244,7 +246,7 @@ function formatDist(meter) {
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.min(1e60, Math.ceil((1e-5*level**3 + 0.2*level**2 + level*6 + 72) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
+    nextXp = Math.min(1e60, Math.ceil((3e-6*level**3 + 0.01*level**2 + level*1.25 + 9) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
 }
 
 function commitScoreAsXp() {
@@ -1486,7 +1488,7 @@ function openCell(r, c) {
     cell.isOpen = true;
     cell.justOpened = true;
     const cellDistrict = Math.floor(cell.c / AREA_LENGTH) + 1;
-    score += ((cellDistrict+1)**2.4 * 0.1 * 1.05**cellDistrict);
+    score += ((cellDistrict+1)**2.4 * 0.004 * 1.05**cellDistrict);
 
     // Recursive flood fill if 0 neighbor mines
     if (cell.neighborMines === 0 && !cell.isMine) {
