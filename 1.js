@@ -2,23 +2,23 @@ const $ = (id) => document.getElementById(id);
 
 //Const
 const ROWS = 13, VIEW_COLS = 33, INITIAL_GEN_LEN = 150, CHUNK_GEN_LEN = 50, AREA_LENGTH = 1600, CHECKPOINT_FREQ = 200;
+const DISTRICTS_PER_SECTOR = 16;
 const DZ_START_POS = 1550, DZ_END_POS = 1599, DZ_MINE_RATIO_MULT = 1.5;
 
 MINE_RATIO_MAX = 0.24, HARD_LM_DMG = 1.79769e308;
 const DISTRICT_MINE_RATIO = [
-    1/16, 1/12.5, 1/11.5, 1/11, 1/10, 1/9.5, 1/9, 1/8.5, 1/8, 1/7.75, 
-    1/7.5, 1/7.25, 1/7, 1/6.8, 1/6.6, 1/6.4, 1/6.25, 1/6.1, 1/6, 1/5.9, 
-    1/5.8, 1/5.7, 1/5.6, 1/5.5, 1/5.45, 1/5.4, 1/5.35, 1/5.3, 1/5.25, 1/5.2, 
-    1/5.15, 1/5.12, 1/5.09, 1/5.06, 1/5.03, 1/5, 1/4.97, 1/4.94, 1/4.91, 1/4.88, 
-    1/4.85, 1/4.82, 1/4.79, 1/4.76, 1/4.73, 1/4.7, 1/4.67, 1/4.64, 1/4.61, 1/4.58, 
-    1/4.55, 1/4.52, 1/4.5
+    1/16, 1/14, 1/12.5, 1/11.5, 1/11, 1/10.5, 1/10, 1/9.5, 1/9, 1/8.75,
+    1/8.5, 1/8.25, 1/8, 1/7.8, 1/7.6, 1/7.4, 1/7.2, 1/7, 1/6.85, 1/6.7, 
+    1/6.55, 1/6.4, 1/6.3, 1/6.2, 1/6.1, 1/6, 1/5.94, 1/5.88, 1/5.82, 1/5.76, 
+    1/5.7, 1/5.65, 1/5.6, 1/5.55, 1/5.5, 1/5.45, 1/5.4, 1/5.35, 1/5.3, 1/5.25, 
+    1/5.2, 1/5.15, 1/5.1, 1/5.06, 1/5.03, 1/5
 ];
 const DISTRICT_MINE_DMG   = [128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512];
 
 //Map
 let maxGeneratedCol = 0;
 let boardMap = new Map(); // Key: `${r},${c}` -> cell object
-const progressSpeed = 30;
+const progressSpeed = 15;
 
 //Bools
 let isFirstClick = true, isGameOver = false, isSliding = false, isFlagModeMobile = false;
@@ -210,21 +210,22 @@ function finalizeGameStats() {
 
 function updatePlayerStats() {
     getPlayerNextXp();
-    mhp = Math.floor(0.015*level**2 + level + 160);
+    const lowLv = Math.min(1000, level), hiLv = Math.max(0, level-1000);
+    mhp = Math.floor(0.015*(lowLv)**2 + level + 160 + 31.5*hiLv);
     regen = level*.0167 + .84 + mhp/1000;
 }
 
 function calcLmDmgAfter16(d) {
     let A = 512, add = 32;
     for (let i = 0; i < d; i++) {A += add;if ((A & (A - 1)) === 0) {add = A / 16;}}
-    return A;
+    return Math.min(A, Math.max(32768, d*2048-163840));
 }
 updatePlayerStats();
 hp = mhp;
 
 
 function notatVal(val) {
-    if (val<1e7) return val;
+    if (val<1e7) return Math.floor(val);
     const len = Math.floor(Math.log10(val) / 3);
     const sufi = ["", "", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"][len];
     if (sufi == undefined) return (val / (1e3 ** len)).toFixed(2) + "e" + (len * 3);
@@ -260,7 +261,7 @@ function formatDist(meter) {
 }
 
 function getPlayerNextXp() {
-    nextXp = Math.min(1e60, Math.ceil((3e-6*level**3 + 0.01*level**2 + level*1.25 + 9) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
+    nextXp = Math.min(1e300, Math.ceil((3e-6*level**3 + 0.01*level**2 + level*1.25 + 9) * (level>100 ? 2 : 1) * (level>400 ? 4 : 1) * 1.001**level));
 }
 
 function commitScoreAsXp() {
@@ -376,7 +377,7 @@ function updatePlayerDisplay() {
         const pct = nextXp > 0 ? Math.min(100, Math.max(0, (xp / nextXp) * 100)) : 0;
         xpBarEl.style.width = `${pct}%`;
     }
-    if (regenValueEl) regenValueEl.textContent = `(+${regen.toFixed(2)}/m)`;
+    if (regenValueEl) regenValueEl.textContent = `(+${regen>1e3 ? notatVal(regen) : regen.toFixed(2)}/m)`;
 }
 
 function getBgmTargetVolume(trackName) {
@@ -1004,6 +1005,9 @@ function updateTexts() {
     document.querySelectorAll("#start-district option").forEach((option) => {
         option.textContent = ja ? `${option.value}区` : `District ${option.value}`;
     });
+    document.querySelectorAll("#start-sector option").forEach((option) => {
+        option.textContent = ja ? `セクタ${option.value}` : `Sector ${option.value}`;
+    });
     const finalScoreLabel = $("final-score-label");
     if (finalScoreLabel) finalScoreLabel.textContent = ja ? "スコア" : "SCORE";
     const finalDistLabel = $("final-distance-label");
@@ -1164,20 +1168,9 @@ function resetGame() {
     isSliding = false;
 
     const startCheckpointSelect = $('start-checkpoint');
-    const startDistrictSelect = $('start-district');
     const startCheckpointControl = $('start-checkpoint-control');
     if (startCheckpointControl) startCheckpointControl.hidden = false;
-    if (startDistrictSelect) {
-        startDistrictSelect.replaceChildren();
-        for (let unlockedDistrict = 1; unlockedDistrict <= getMaxUnlockedDistrict(); unlockedDistrict++) {
-            const option = document.createElement('option');
-            option.value = String(unlockedDistrict);
-            option.textContent = clang===1 ? `${option.value}区` : `District ${option.value}`;;
-            startDistrictSelect.appendChild(option);
-        }
-        startDistrictSelect.value = String(selectedStartDistrict);
-        startDistrictSelect.disabled = false;
-    }
+    updateStartLocationOptions();
     if (startCheckpointSelect) {
         populateStartCheckpointOptions(startCheckpointSelect);
         startCheckpointSelect.value = String(selectedStartCheckpoint);
@@ -1202,6 +1195,48 @@ function getMaxUnlockedDistrict() {
     return Math.floor((passedCheckpointCount * CHECKPOINT_FREQ) / AREA_LENGTH) + 1;
 }
 
+function getSectorForDistrict(districtNumber) {
+    return Math.floor((districtNumber - 1) / DISTRICTS_PER_SECTOR) + 1;
+}
+
+function getSectorFirstDistrict(sectorNumber) {
+    return (sectorNumber - 1) * DISTRICTS_PER_SECTOR + 1;
+}
+
+function updateStartLocationOptions() {
+    const sectorSelect = $('start-sector');
+    const districtSelect = $('start-district');
+    const maxUnlockedDistrict = getMaxUnlockedDistrict();
+    const selectedSector = getSectorForDistrict(selectedStartDistrict);
+
+    if (sectorSelect) {
+        sectorSelect.replaceChildren();
+        const maxUnlockedSector = getSectorForDistrict(maxUnlockedDistrict);
+        for (let sector = 1; sector <= maxUnlockedSector; sector++) {
+            const option = document.createElement('option');
+            option.value = String(sector);
+            option.textContent = clang === 1 ? `セクタ${sector}` : `Sector ${sector}`;
+            sectorSelect.appendChild(option);
+        }
+        sectorSelect.value = String(selectedSector);
+        sectorSelect.disabled = !isFirstClick;
+    }
+
+    if (districtSelect) {
+        districtSelect.replaceChildren();
+        const firstDistrict = getSectorFirstDistrict(selectedSector);
+        const lastDistrict = Math.min(selectedSector * DISTRICTS_PER_SECTOR, maxUnlockedDistrict);
+        for (let unlockedDistrict = firstDistrict; unlockedDistrict <= lastDistrict; unlockedDistrict++) {
+            const option = document.createElement('option');
+            option.value = String(unlockedDistrict);
+            option.textContent = clang === 1 ? `${unlockedDistrict}区` : `District ${unlockedDistrict}`;
+            districtSelect.appendChild(option);
+        }
+        districtSelect.value = String(selectedStartDistrict);
+        districtSelect.disabled = !isFirstClick;
+    }
+}
+
 function getDistrictFirstCheckpoint(districtNumber) {
     return Math.floor(((districtNumber - 1) * AREA_LENGTH) / CHECKPOINT_FREQ);
 }
@@ -1223,10 +1258,23 @@ function populateStartCheckpointOptions(select) {
     }
 }
 
+function changeStartSector(value) {
+    if (!isFirstClick || isGameOver || isSliding) return;
+    const newSector = Number.parseInt(value, 10);
+    const maxUnlockedSector = getSectorForDistrict(getMaxUnlockedDistrict());
+    if (!Number.isInteger(newSector) || newSector < 1 || newSector > maxUnlockedSector) return;
+    selectedStartDistrict = getSectorFirstDistrict(newSector);
+    selectedStartCheckpoint = getDistrictFirstCheckpoint(selectedStartDistrict);
+    resetGame();
+}
+
 function changeStartDistrict(value) {
     if (!isFirstClick || isGameOver || isSliding) return;
     const newDistrict = Number.parseInt(value, 10);
-    if (!Number.isInteger(newDistrict) || newDistrict < 1 || newDistrict > getMaxUnlockedDistrict()) return;
+    if (!Number.isInteger(newDistrict)
+        || newDistrict < 1
+        || newDistrict > getMaxUnlockedDistrict()
+        || getSectorForDistrict(newDistrict) !== getSectorForDistrict(selectedStartDistrict)) return;
     selectedStartDistrict = newDistrict;
     selectedStartCheckpoint = getDistrictFirstCheckpoint(newDistrict);
     resetGame();
@@ -1466,6 +1514,7 @@ async function handleCellClick(r, c) {
         isFirstClick = false;
         $('start-checkpoint-control').hidden = true;
         $('start-checkpoint').disabled = true;
+        $('start-sector').disabled = true;
         $('start-district').disabled = true;
         startTimer();
         startOrUpdateBgm();
@@ -1517,7 +1566,7 @@ function openCell(r, c) {
     cell.isOpen = true;
     cell.justOpened = true;
     const cellDistrict = Math.floor(cell.c / AREA_LENGTH) + 1;
-    score += ((cellDistrict+1)**2.4 * 0.004 * 1.05**cellDistrict);
+    score += Math.min(1e298, ((cellDistrict+1)**2.4 * 0.004 * 1.05**cellDistrict));
 
     // Recursive flood fill if 0 neighbor mines
     if (cell.neighborMines === 0 && !cell.isMine) {
@@ -1607,15 +1656,7 @@ async function checkAdvanceAnimated() {
             selectedStartDistrict = Math.floor(distance / AREA_LENGTH) + 1;
             selectedStartCheckpoint = passedCheckpointCount;
             localStorage.setItem('Lmr_passedCP', String(passedCheckpointCount));
-            const startDistrictSelect = $('start-district');
-            if (startDistrictSelect && !Array.from(startDistrictSelect.options)
-                .some((option) => Number.parseInt(option.value, 10) === selectedStartDistrict)) {
-                const option = document.createElement('option');
-                option.value = String(selectedStartDistrict);
-                option.textContent = `${clang === 1 ? '地区' : 'District'} ${selectedStartDistrict}`;
-                startDistrictSelect.appendChild(option);
-            }
-            if (startDistrictSelect) startDistrictSelect.value = String(selectedStartDistrict);
+            updateStartLocationOptions();
             const startCheckpointSelect = $('start-checkpoint');
             if (startCheckpointSelect) {
                 populateStartCheckpointOptions(startCheckpointSelect);
@@ -1704,12 +1745,11 @@ function updateStatsDisplay() {
     const displayedHp = $('hp-value');
     const hpBar = $('hp-bar');
     const hpGauge = $('hp-gauge');
-    if (displayedHp) displayedHp.textContent = `${Math.ceil(hp)} / ${mhp}`;
+    if (displayedHp) displayedHp.textContent = `${notatVal(Math.ceil(hp))} / ${notatVal(mhp)}`;
     if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, hp / mhp * 100))}%`;
     if (hpGauge) {
         hpGauge.setAttribute('aria-valuemax', String(mhp));
         hpGauge.setAttribute('aria-valuenow', String(Math.max(0, Math.min(mhp, hp))));
-        hpGauge.setAttribute('aria-valuetext', `${hp.toFixed(2)} / ${mhp}`);
     }
 }
 
