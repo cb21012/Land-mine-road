@@ -8,27 +8,35 @@
     - Snowy Day 3
     - Foreboding
     - Frosylva
+    - Mystic Tides
+    - Forgotten Past
 - Maou Damashii (魔王魂) (https://maoudamashii.jokersounds.com/)
   - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.en)
     - Acoustic36
-    - Acoustic30
     - Healing3
     - Acoustic50
-    - Piano31
+    - Acoustic30
     - Acoustic48
+    - Piano31
     - Acoustic31
 - Cleyton Kauffman (https://soundcloud.com/cleytonkauffman)
   - CC 0 (https://creativecommons.org/publicdomain/zero/1.0/deed.en)
     - Betters days are Coming (Lo-Fi Ver.)
     - Underwater
     - Exploration Theme
+- Yoiyami ()
+  - CC 0 (https://creativecommons.org/publicdomain/zero/1.0/deed.en)
+    - First Light Particles
+    - Yoiyami Core Theme
+    - Starfield Romance
+    - The Budding of Consciousness
 - Moppy sound (もっぴーさうんど) (https://www.moppysound.com/)
   - OpenTracks (https://opentracks.com/en/help/articles/license/)
     - Snow sky (雪空)
     - 旅立ち
     - Dreamy Aspiration (夢見る憧憬)
-    - ながれぼし(Track 2)
     - Rain (雨雫)
+    - ながれぼし(Track 2)
     - Rain Sound (アマオト)
 - DONG (https://yh.16dimensional.com/)
   - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.en)
@@ -38,9 +46,9 @@
     - Delusion
     - Mystery Manor
     - Tower of Great Lords
+    - Peaceful Place
     - Ghost's band
     - Journey to the East Rocks
-    - Peaceful Place
     - Without
 - Scott Elliott (https://opengameart.org/users/scrabbit)
   - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.en)
@@ -54,9 +62,3 @@
 - pauliuw (https://opengameart.org/users/pauliuw)
   - CC 0 (https://creativecommons.org/publicdomain/zero/1.0/deed.en)
     - The Field Of Dreams
-- Yoiyami ()
-  - CC 0 (https://creativecommons.org/publicdomain/zero/1.0/deed.en)
-    - First Light Particles
-    - Starfield Romance
-    - The Budding of Consciousness
-    - Yoiyami Core Theme
